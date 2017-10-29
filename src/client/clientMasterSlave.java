@@ -2,6 +2,7 @@ package client;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +21,10 @@ import org.glassfish.jersey.client.ClientConfig;
 
 import API.clientAPI;
 import utils.Element;
+import utils.MyBoolean;
 import utils.MyEntry;
 import utils.MyList;
+import utils.MyListEntry;
 
 public class clientMasterSlave implements clientAPI{
 
@@ -36,7 +39,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Map<String, String> getSet(String key) {
-		
+
 		//target.path("getSet/"+key).request().async().get()
 
 		MyEntry entry = target.path("server/"+key)
@@ -49,7 +52,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public String addSet(String key, Map<String, String> set) {
-		
+
 		MyEntry entry = new MyEntry(set);
 		Response response = target.path("server/"+key)
 				.request()
@@ -59,7 +62,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public boolean removeSet(String key) {
-		
+
 		Response response = target.path("server/"+key)
 				.request()
 				.delete();
@@ -79,9 +82,9 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public void incr(String key,String field) {
-		
+
 		incrBy(key,field, 1);
-		
+
 	}
 
 	@Override
@@ -96,7 +99,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public int sum(String key1, String field, String key2) {
-		
+
 		int response = target.queryParam("key1", key1).queryParam("key2", key2).queryParam("field", field).path("server/sum/")
 				.request()
 				.get(Integer.class);
@@ -105,7 +108,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public int multConst(String key, String field, int constant) {
-		
+
 		int response = target.queryParam("key", key).queryParam("const", constant).queryParam("field", field).path("server/multConst/")
 				.request()
 				.get(Integer.class);
@@ -114,7 +117,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public int mult(String key1, String field, String key2) {
-		
+
 		int response = target.queryParam("key1", key1).queryParam("key2", key2).queryParam("field", field).path("server/mult/")
 				.request()
 				.get(Integer.class);
@@ -135,7 +138,7 @@ public class clientMasterSlave implements clientAPI{
 
 		List<String> l = new LinkedList<String>();
 		set.forEach((k, v) -> l.add(k+":"+v));
-	
+
 		MyList list = target.queryParam("query", l.toArray()).path("server/searchEntrys/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
@@ -144,27 +147,43 @@ public class clientMasterSlave implements clientAPI{
 	}
 
 	@Override
-	public List<Map<String, String>> orderEntrys(String field) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<MyEntry> orderEntrys(String field) {
+
+
+		MyListEntry list = target.queryParam("query", field).path("server/orderEntrys/")
+				.request()
+				.accept(MediaType.APPLICATION_JSON)
+				.get(MyListEntry.class);
+		return list.getList();
 	}
 
 	@Override
-	public List<Map<String, String>> searchGreaterThan(String field, int value) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<MyEntry> searchGreaterThan(String field, int value) {
+
+		MyListEntry list = target.queryParam("field", field).queryParam("value", value).path("server/searchGreaterThan/")
+				.request()
+				.accept(MediaType.APPLICATION_JSON)
+				.get(MyListEntry.class);
+		return list.getList();
 	}
 
 	@Override
-	public List<Map<String, String>> searchLesserThan(String field, int value) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<MyEntry> searchLesserThan(String field, int value) {
+		MyListEntry list = target.queryParam("field", field).queryParam("value", value).path("server/searchLesserThan/")
+				.request()
+				.accept(MediaType.APPLICATION_JSON)
+				.get(MyListEntry.class);
+		return list.getList();
 	}
 
 	@Override
 	public boolean valuegreaterThan(String key1, String field, String key2) {
-		// TODO Auto-generated method stub
-		return false;
+		
+		MyBoolean isGreater = target.queryParam("key1", key1).queryParam("field", field).queryParam("key2", key2).path("server/valuegreaterThan/")
+				.request()
+				.accept(MediaType.APPLICATION_JSON)
+				.get(MyBoolean.class);
+		return isGreater.isMyboolean();
 	}
 
 

@@ -4,17 +4,17 @@ import java.util.List;
 
 public class MyList {
 	
-	public List<String> getList() {
+	public List getList() {
 		return list;
 	}
 
-	public void setList(List<String> list) {
+	public void setList(List list) {
 		this.list = list;
 	}
 
-	List<String> list;
+	List list;
 
-	public MyList(List<String> list) {
+	public MyList(List list) {
 		super();
 		this.list = list;
 	}

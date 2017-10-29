@@ -1,10 +1,16 @@
 
 package server;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -28,9 +34,11 @@ import org.glassfish.jersey.server.ManagedAsync;
 
 import redis.clients.jedis.Jedis;
 import utils.Element;
+import utils.MyBoolean;
 import utils.MyEntry;
 import utils.MyList;
-import utils.Utils;
+import utils.MyListEntry;
+
 
 @Path("/server")
 public class ServerResources {
@@ -63,10 +71,8 @@ public class ServerResources {
 		Map<String,String> map = entry.getAttributes();
 		jedis.hmset(key, map);
 		map.forEach((k, v) -> {
-			if(Utils.isNumeric(v))
-				jedis.zadd(k, Double.parseDouble(v), key);
-			else
-				jedis.sadd(k+":"+v, key);});
+			jedis.sadd(":"+k+":", key);
+			jedis.sadd(k+":"+v, key);});
 
 	}
 
@@ -164,15 +170,108 @@ public class ServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyList searchEntrys( @QueryParam("query")  List<String>  query) {
 
+		String string = null;
+		Iterator<String> iterator = query.iterator();
+		if ( iterator.hasNext()) {
+			string = (String) iterator.next();
+		}
 
-		List<String> l = jedis.sinter( query.toArray(new String[query.size()])).stream().collect(Collectors.toList());
+		Set<String> set = jedis.smembers(string);
+		for (; iterator.hasNext();) {
+			string = (String) iterator.next();
+			set.retainAll(jedis.smembers(string));
+
+		}
+		List<String> l = set.stream().collect(Collectors.toList());
 		MyList list = new MyList(l);
 		return list;
+	}
+
+
+	@GET
+	@Path("/orderEntrys")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MyListEntry orderEntrys( @QueryParam("query")  String field) {
+
+
+		Comparator<MyEntry> comparator = new Comparator<MyEntry>() {
+			public int compare(MyEntry m1, MyEntry m2) {
+				double a = Integer.valueOf(m1.getAttributes().get(field));
+				double b = Integer.valueOf(m2.getAttributes().get(field));
+				if (a > b)
+					return 1;
+				else return -1;
+			}
+		};
+
+		Set<String> set = jedis.smembers(":"+field+":");
+		SortedSet<MyEntry> s = new TreeSet<MyEntry>(comparator);
+
+		set.forEach((key) -> { 
+			s.add((new MyEntry(key,jedis.hgetAll(key))));
+		});
+
+		MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+		return list;
+	}
+
+	@GET
+	@Path("/searchGreaterThan")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MyListEntry searchGreaterThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
+
+
+		Set<String> set = jedis.smembers(":"+field+":");
+		Set<MyEntry> s = new HashSet<MyEntry>();
+
+		set.forEach((key) -> { 
+			Map<String, String> map = jedis.hgetAll(key);
+			if (Integer.valueOf(map.get(field)) > Integer.valueOf(value))
+				s.add((new MyEntry(key,map)));
+		});
+
+		MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+		return list;
+	}
+
+	@GET
+	@Path("/searchLesserThan")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MyListEntry searchLesserThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
+
+
+		Set<String> set = jedis.smembers(":"+field+":");
+		Set<MyEntry> s = new HashSet<MyEntry>();
+
+		set.forEach((key) -> { 
+			Map<String, String> map = jedis.hgetAll(key);
+			if (Integer.valueOf(map.get(field)) < Integer.valueOf(value))
+				s.add((new MyEntry(key,map)));
+		});
+
+		MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+		return list;
+	}
+
+	@GET
+	@Path("/valuegreaterThan")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MyBoolean valuegreaterThan(@QueryParam("key1") String key1, 
+			@QueryParam("field")  String field, 
+			@QueryParam("key2") String key2) {
+
+
+		long value1 = Integer.valueOf(jedis.hget(key1, field));
+		long value2 = Integer.valueOf(jedis.hget(key2, field));
+
+		MyBoolean isGreater = new MyBoolean(value1>value2);
+		return isGreater;
 
 
 
 
 	}
+
 
 
 }
