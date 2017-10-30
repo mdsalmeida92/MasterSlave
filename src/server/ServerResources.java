@@ -33,6 +33,8 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.server.ManagedAsync;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import utils.Element;
 import utils.MyBoolean;
 import utils.MyEntry;
@@ -42,10 +44,11 @@ import utils.MyListEntry;
 
 @Path("/server")
 public class ServerResources {
-	public Jedis jedis;
+	public JedisPool jedisPool ;
 
 	public ServerResources(){
-		jedis = new Jedis();
+		jedisPool = new JedisPool(new JedisPoolConfig(), "localhost", 6379);
+		Jedis jedis= jedisPool.getResource();
 		jedis.connect();
 		jedis.flushAll();
 		System.out.println(jedis.ping());
@@ -57,22 +60,31 @@ public class ServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyEntry getEntry( @PathParam("key") String key) {
 
-		Map<String, String> map = jedis.hgetAll(key);
-		MyEntry entry = new MyEntry(map);
-		return entry;
+		try (Jedis jedis = jedisPool.getResource()) {
+		    Map<String, String> map = jedis.hgetAll(key);
+			MyEntry entry = new MyEntry(map);
+			return entry;
+		}
+
 
 	}
+	
+
 
 	@POST
 	@Path("/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void putEntry(@PathParam("key") String key, MyEntry entry) {
 
+		try (Jedis jedis = jedisPool.getResource()) {
+		System.out.println(key);
 		Map<String,String> map = entry.getAttributes();
 		jedis.hmset(key, map);
 		map.forEach((k, v) -> {
 			jedis.sadd(":"+k+":", key);
 			jedis.sadd(k+":"+v, key);});
+		}
+
 
 	}
 
@@ -80,10 +92,12 @@ public class ServerResources {
 	@Path("/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void removeEntry(@PathParam("key") String key) {
+		try (Jedis jedis = jedisPool.getResource()) {
+			Map<String, String> map = jedis.hgetAll(key);
+			map.forEach((k, v) -> jedis.srem(k+":"+v, key));
+			jedis.del(key);
+		}
 
-		Map<String, String> map = jedis.hgetAll(key);
-		map.forEach((k, v) -> jedis.srem(k+":"+v, key));
-		jedis.del(key);
 
 	}
 
@@ -91,12 +105,14 @@ public class ServerResources {
 	@Path("/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void updateEntry(@PathParam("key") String key, Element element) {
+		try (Jedis jedis = jedisPool.getResource()) {
+			if ( ! jedis.exists(key))
+				throw new WebApplicationException(  );
+			else
 
-		if ( ! jedis.exists(key))
-			throw new WebApplicationException(  );
-		else
+				jedis.hset(key, element.getField(), element.getElement());
 
-			jedis.hset(key, element.getField(), element.getElement());
+		}
 
 	}
 
@@ -104,12 +120,14 @@ public class ServerResources {
 	@Path("/incr/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void incr(@PathParam("key") String key, Element value) {
+		try (Jedis jedis = jedisPool.getResource()) {
+			if ( ! jedis.exists(key))
+				throw new WebApplicationException(  );
+			else
 
-		if ( ! jedis.exists(key))
-			throw new WebApplicationException(  );
-		else
+				jedis.hincrBy(key, value.getField(), Integer.valueOf(value.getElement()));
+		}
 
-			jedis.hincrBy(key, value.getField(), Integer.valueOf(value.getElement()));
 	}
 
 	@GET
@@ -118,10 +136,12 @@ public class ServerResources {
 	public long sum(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
+		try (Jedis jedis = jedisPool.getResource()) {
+			long value1 = Integer.valueOf(jedis.hget(key1, field));
+			long value2 = Integer.valueOf(jedis.hget(key2, field));
+			return value1+value2;
 
-		long value1 = Integer.valueOf(jedis.hget(key1, field));
-		long value2 = Integer.valueOf(jedis.hget(key2, field));
-		return value1+value2;
+		}
 
 
 	}
@@ -132,9 +152,11 @@ public class ServerResources {
 	public long sumConst(@QueryParam("key") String key, 
 			@QueryParam("field")  String field, 
 			@QueryParam("const") int constant) {
+		try (Jedis jedis = jedisPool.getResource()) {
+			long value = Integer.valueOf(jedis.hget(key, field));
+			return value*constant;
 
-		long value = Integer.valueOf(jedis.hget(key, field));
-		return value*constant;
+		}
 
 
 	}
@@ -145,10 +167,12 @@ public class ServerResources {
 	public long mult(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
+		try (Jedis jedis = jedisPool.getResource()) {
+			long value1 = Integer.valueOf(jedis.hget(key1, field));
+			long value2 = Integer.valueOf(jedis.hget(key2, field));
+			return value1*value2;
+		}		
 
-		long value1 = Integer.valueOf(jedis.hget(key1, field));
-		long value2 = Integer.valueOf(jedis.hget(key2, field));
-		return value1*value2;
 
 
 	}
@@ -158,9 +182,12 @@ public class ServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyList searchElement( @QueryParam("field")  String field, 
 			@QueryParam("value") String value) {
-		List<String> l = jedis.smembers(field+":"+value).stream().collect(Collectors.toList());
-		MyList list = new MyList(l);
-		return list;
+		try (Jedis jedis = jedisPool.getResource()) {
+			List<String> l = jedis.smembers(field+":"+value).stream().collect(Collectors.toList());
+			MyList list = new MyList(l);
+			return list;
+		}
+
 
 	}
 
@@ -170,21 +197,24 @@ public class ServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyList searchEntrys( @QueryParam("query")  List<String>  query) {
 
-		String string = null;
-		Iterator<String> iterator = query.iterator();
-		if ( iterator.hasNext()) {
-			string = (String) iterator.next();
+		try (Jedis jedis = jedisPool.getResource()) {
+			String string = null;
+			Iterator<String> iterator = query.iterator();
+			if ( iterator.hasNext()) {
+				string = (String) iterator.next();
+			}
+
+			Set<String> set = jedis.smembers(string);
+			for (; iterator.hasNext();) {
+				string = (String) iterator.next();
+				set.retainAll(jedis.smembers(string));
+
+			}
+			List<String> l = set.stream().collect(Collectors.toList());
+			MyList list = new MyList(l);
+			return list;
 		}
 
-		Set<String> set = jedis.smembers(string);
-		for (; iterator.hasNext();) {
-			string = (String) iterator.next();
-			set.retainAll(jedis.smembers(string));
-
-		}
-		List<String> l = set.stream().collect(Collectors.toList());
-		MyList list = new MyList(l);
-		return list;
 	}
 
 
@@ -193,45 +223,49 @@ public class ServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyListEntry orderEntrys( @QueryParam("query")  String field) {
 
+		try (Jedis jedis = jedisPool.getResource()) {
+			Comparator<MyEntry> comparator = new Comparator<MyEntry>() {
+				public int compare(MyEntry m1, MyEntry m2) {
+					double a = Integer.valueOf(m1.getAttributes().get(field));
+					double b = Integer.valueOf(m2.getAttributes().get(field));
+					if (a > b)
+						return 1;
+					else return -1;
+				}
+			};
 
-		Comparator<MyEntry> comparator = new Comparator<MyEntry>() {
-			public int compare(MyEntry m1, MyEntry m2) {
-				double a = Integer.valueOf(m1.getAttributes().get(field));
-				double b = Integer.valueOf(m2.getAttributes().get(field));
-				if (a > b)
-					return 1;
-				else return -1;
-			}
-		};
+			Set<String> set = jedis.smembers(":"+field+":");
+			SortedSet<MyEntry> s = new TreeSet<MyEntry>(comparator);
 
-		Set<String> set = jedis.smembers(":"+field+":");
-		SortedSet<MyEntry> s = new TreeSet<MyEntry>(comparator);
+			set.forEach((key) -> { 
+				s.add((new MyEntry(key,jedis.hgetAll(key))));
+			});
 
-		set.forEach((key) -> { 
-			s.add((new MyEntry(key,jedis.hgetAll(key))));
-		});
+			MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			return list;
+		}
 
-		MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
-		return list;
 	}
 
 	@GET
 	@Path("/searchGreaterThan")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyListEntry searchGreaterThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
+		try (Jedis jedis = jedisPool.getResource()) {
+			Set<String> set = jedis.smembers(":"+field+":");
+			Set<MyEntry> s = new HashSet<MyEntry>();
+
+			set.forEach((key) -> { 
+				Map<String, String> map = jedis.hgetAll(key);
+				if (Integer.valueOf(map.get(field)) > Integer.valueOf(value))
+					s.add((new MyEntry(key,map)));
+			});
+
+			MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			return list;
+		}
 
 
-		Set<String> set = jedis.smembers(":"+field+":");
-		Set<MyEntry> s = new HashSet<MyEntry>();
-
-		set.forEach((key) -> { 
-			Map<String, String> map = jedis.hgetAll(key);
-			if (Integer.valueOf(map.get(field)) > Integer.valueOf(value))
-				s.add((new MyEntry(key,map)));
-		});
-
-		MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
-		return list;
 	}
 
 	@GET
@@ -239,18 +273,20 @@ public class ServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyListEntry searchLesserThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
 
+		try (Jedis jedis = jedisPool.getResource()) {
+			Set<String> set = jedis.smembers(":"+field+":");
+			Set<MyEntry> s = new HashSet<MyEntry>();
 
-		Set<String> set = jedis.smembers(":"+field+":");
-		Set<MyEntry> s = new HashSet<MyEntry>();
+			set.forEach((key) -> { 
+				Map<String, String> map = jedis.hgetAll(key);
+				if (Integer.valueOf(map.get(field)) < Integer.valueOf(value))
+					s.add((new MyEntry(key,map)));
+			});
 
-		set.forEach((key) -> { 
-			Map<String, String> map = jedis.hgetAll(key);
-			if (Integer.valueOf(map.get(field)) < Integer.valueOf(value))
-				s.add((new MyEntry(key,map)));
-		});
+			MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			return list;
+		}
 
-		MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
-		return list;
 	}
 
 	@GET
@@ -259,13 +295,15 @@ public class ServerResources {
 	public MyBoolean valuegreaterThan(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
+		try (Jedis jedis = jedisPool.getResource()) {
+			long value1 = Integer.valueOf(jedis.hget(key1, field));
+			long value2 = Integer.valueOf(jedis.hget(key2, field));
 
+			MyBoolean isGreater = new MyBoolean(value1>value2);
+			return isGreater;
 
-		long value1 = Integer.valueOf(jedis.hget(key1, field));
-		long value2 = Integer.valueOf(jedis.hget(key2, field));
+		}
 
-		MyBoolean isGreater = new MyBoolean(value1>value2);
-		return isGreater;
 
 
 
