@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -38,9 +39,9 @@ public class test {
 
 
 		addGetTest(client, map);
-		//addElementTest(client, map);
-		//removeTest(client, map);
-	//	incrTest(client, map);
+		addElementTest(client, map);
+		removeTest(client, map);
+		incrTest(client, map);
 		sumTest(client, map, map2);
 		sumConstTest(client, map);
 		multTest(client, map, map2);
@@ -50,8 +51,11 @@ public class test {
 		searchGreaterThanTest(client, map, map2, map3);
 		searchLesserThanTest(client, map, map2, map3);
 		isGreaterThanTest(client, map, map2);
-		
+
+
+		client.Close();
 		System.err.println("acabou");
+
 
 	}
 
@@ -61,7 +65,7 @@ public class test {
 
 		Future<Map<String,String>>  myEntry =  client.getSet("ola1005");
 		Map<String,String> mapGET = myEntry.get();
-		
+
 		assert map.equals(mapGET);
 		client.removeSet("ola1005");
 
@@ -111,9 +115,8 @@ public class test {
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
 		Future<Integer> value = client.sum("ola1005", "field4", "ola1006");
-		
+
 		long v = value.get();
-		System.out.println(v);
 		assert v == 6;
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
@@ -126,7 +129,7 @@ public class test {
 
 		client.addSet("ola1005", map);
 		Future<Integer> value = client.multConst("ola1005", "field4", 6);
-		
+
 		assert value.get() == 6;
 		client.removeSet("ola1005");
 
@@ -139,7 +142,7 @@ public class test {
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
 		Future<Integer> value = client.mult("ola1005", "field4", "ola1006");
-		
+
 		assert value.get() == 5;
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
@@ -151,7 +154,7 @@ public class test {
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
-		Future<List> list = client.searchElement("field2", "World");
+		Future<List<String>> list = client.searchElement("field2", "World");
 
 		assert list.get().contains("ola1005");
 		client.removeSet("ola1005");
@@ -170,11 +173,11 @@ public class test {
 		mapTemp.put("field1", "Hello");
 		mapTemp.put("field2", "World");
 		//mapTemp.put("field4", "5");
-		Future<MyList> list = client.searchEntry(mapTemp);
-		
+		Future<List<String>> list = client.searchEntry(mapTemp);
 
 
-		assert list.get().getList().contains("ola1005");
+
+		assert list.get().contains("ola1005");
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
 
@@ -188,13 +191,13 @@ public class test {
 		client.addSet("ola1007", map3);
 
 
-		Future<MyListEntry> list = client.orderEntrys("field4");
+		Future<List<MyEntry>> list = client.orderEntrys("field4");
 		List<String> keys = new LinkedList<>();
 		keys.add("ola1005");
 		keys.add("ola1006");
 		keys.add("ola1007");
-		
-		List<MyEntry> l = list.get().getList();
+
+		List<MyEntry> l = list.get();
 
 		Iterator<String> it = keys.iterator();
 		for (Iterator<MyEntry> iterator = l.iterator()  ; iterator.hasNext() && it.hasNext();) {
@@ -206,7 +209,7 @@ public class test {
 		client.removeSet("ola1006");
 		client.removeSet("ola1007");
 	}
-	
+
 	static void searchGreaterThanTest(clientAPI client, Map<String,String> map, Map<String,String> map2, Map<String,String> map3) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
@@ -214,10 +217,10 @@ public class test {
 		client.addSet("ola1007", map3);
 
 
-		Future<MyListEntry> list = client.searchGreaterThan("field4", 5);
+		Future<List<MyEntry>> list = client.searchGreaterThan("field4", 5);
 
-		
-		List<MyEntry> l = list.get().getList();
+
+		List<MyEntry> l = list.get();
 		for (Iterator<MyEntry> iterator = l.iterator()  ; iterator.hasNext();) {
 			MyEntry myEntry = iterator.next();
 			assert "ola1007".equals(myEntry.getKey());
@@ -227,7 +230,7 @@ public class test {
 		client.removeSet("ola1007");
 
 	}
-	
+
 	static void searchLesserThanTest(clientAPI client, Map<String,String> map, Map<String,String> map2, Map<String,String> map3) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
@@ -235,11 +238,11 @@ public class test {
 		client.addSet("ola1007", map3);
 
 
-		Future<MyListEntry> list = client.searchLesserThan("field4", 5);
+		Future<List<MyEntry>> list = client.searchLesserThan("field4", 5);
 
-		
-		
-		List<MyEntry> l = list.get().getList();
+
+
+		List<MyEntry> l = list.get();
 
 		for (Iterator<MyEntry> iterator = l.iterator()  ; iterator.hasNext();) {
 			MyEntry myEntry = iterator.next();
@@ -249,14 +252,14 @@ public class test {
 		client.removeSet("ola1006");
 		client.removeSet("ola1007");
 	}
-	
+
 	static void isGreaterThanTest(clientAPI client, Map<String,String> map, Map<String,String> map2) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
-		Future<MyBoolean> isGreaterThan = client.valuegreaterThan("ola1005", "field4", "ola1006");
-		
-		assert !(isGreaterThan.get().isMyboolean());
+		Future<Boolean> isGreaterThan = client.valuegreaterThan("ola1005", "field4", "ola1006");
+
+		assert !(isGreaterThan.get());
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
 

@@ -34,14 +34,19 @@ import utils.MyListEntry;
 public class clientMasterSlave implements clientAPI{
 
 	WebTarget target;
+	Client client;
 
 	public clientMasterSlave(String targelUrl) {
 		ClientConfig config = new ClientConfig();
-		Client client = ClientBuilder.newClient(config);
+		client = ClientBuilder.newClient(config);
 		URI baseURI = UriBuilder.fromUri(targelUrl).build();
 		target = client.target(baseURI);
+
 	}
 
+	public void Close() {
+		client.close();
+	}
 		@Override
 		public Future<Map<String,String>> getSet(String key) throws InterruptedException, ExecutionException {
 	
@@ -58,7 +63,7 @@ public class clientMasterSlave implements clientAPI{
 		             return entry.get().getAttributes();
 		         }});
 			
-			
+			 executor.shutdown();
 			return future;
 		}
 
@@ -80,10 +85,10 @@ public class clientMasterSlave implements clientAPI{
 	@Override
 	public boolean removeSet(String key) throws InterruptedException, ExecutionException {
 
-		Future<Response>  response = target.path("server/"+key)
-				.request().async()
+		Response  response = target.path("server/"+key)
+				.request()
 				.delete();
-		System.out.println("delete " + key + " " +response.get().getStatus());
+		System.out.println("delete " + key + " " +response.getStatus());
 		return true;
 	}
 
@@ -143,26 +148,19 @@ public class clientMasterSlave implements clientAPI{
 	}
 
 	@Override
-	public Future<List> searchElement(String field, String value) {
+	public Future<List<String>> searchElement(String field, String value) {
 		Future<MyList> list = target.queryParam("field", field).queryParam("value", value).path("server/searchElement/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)				
 				.async()
 				.get(MyList.class);
 		
-		ExecutorService executor = Executors.newFixedThreadPool(1);
-		Future<List> future = executor.submit(new Callable<List>() {
-	         public List call() throws InterruptedException, ExecutionException {
-	             return list.get().getList();
-	         }});
-		
-		
-		return future;
+		return FutureGetListString(list);
 
 	}
 
 	@Override
-	public Future<MyList> searchEntry(Map<String, String> set) {
+	public Future<List<String>> searchEntry(Map<String, String> set) {
 
 		List<String> l = new LinkedList<String>();
 		set.forEach((k, v) -> l.add(k+":"+v));
@@ -172,11 +170,12 @@ public class clientMasterSlave implements clientAPI{
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyList.class);
-		return list;
+		
+		return FutureGetListString(list);
 	}
 
 	@Override
-	public Future<MyListEntry> orderEntrys(String field) {
+	public Future<List<MyEntry>> orderEntrys(String field) {
 
 
 		Future<MyListEntry> list = target.queryParam("query", field).path("server/orderEntrys/")
@@ -184,41 +183,77 @@ public class clientMasterSlave implements clientAPI{
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyListEntry.class);
-		return list;
+		
+		return FutureGetListMyEntry(list);
 	}
 
 	@Override
-	public Future<MyListEntry> searchGreaterThan(String field, int value) {
+	public Future<List<MyEntry>> searchGreaterThan(String field, int value) {
 
 		Future<MyListEntry> list = target.queryParam("field", field).queryParam("value", value).path("server/searchGreaterThan/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyListEntry.class);
-		return list;
+		
+		return FutureGetListMyEntry(list);
 	}
 
 	@Override
-	public Future<MyListEntry> searchLesserThan(String field, int value) {
+	public Future<List<MyEntry>> searchLesserThan(String field, int value) {
 		Future<MyListEntry> list = target.queryParam("field", field).queryParam("value", value).path("server/searchLesserThan/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyListEntry.class);
-		return list;
+		
+		return FutureGetListMyEntry(list);
+
 	}
 
 	@Override
-	public Future<MyBoolean> valuegreaterThan(String key1, String field, String key2) {
+	public Future<Boolean> valuegreaterThan(String key1, String field, String key2) {
 
 		Future<MyBoolean> isGreater = target.queryParam("key1", key1).queryParam("field", field).queryParam("key2", key2).path("server/valuegreaterThan/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyBoolean.class);
-		return isGreater;
+		
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		Future<Boolean> future = executor.submit(new Callable<Boolean>() {
+	         public Boolean call() throws InterruptedException, ExecutionException {
+	             return isGreater.get().isMyboolean();
+	         }});
+		executor.shutdown();
+		
+		return future;
 	}
 
+	
+	private Future<List<MyEntry>> FutureGetListMyEntry(Future<MyListEntry> list) {
+		
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		Future<List<MyEntry>> future = executor.submit(new Callable<List<MyEntry>>() {
+	         public List<MyEntry> call() throws InterruptedException, ExecutionException {
+	             return list.get().getList();
+	         }});
+		executor.shutdown();
+		
+		return future;
+	}
+	
+	private Future<List<String>> FutureGetListString(Future<MyList> list) {
+		
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		Future<List<String>> future = executor.submit(new Callable<List<String>>() {
+	         public List<String> call() throws InterruptedException, ExecutionException {
+	             return list.get().getList();
+	         }});
+		executor.shutdown();
+		
+		return future;
+	}
 
 
 }
