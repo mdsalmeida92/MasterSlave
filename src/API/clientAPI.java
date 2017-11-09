@@ -11,7 +11,7 @@ import utils.MyListEntry;
 
 public interface clientAPI {
 	
-	 public Future<MyEntry> getSet (String key) throws InterruptedException, ExecutionException;
+	 public Future<Map<String,String>> getSet (String key) throws InterruptedException, ExecutionException;
 	 public String addSet (String key, Map<String, String> set) throws InterruptedException, ExecutionException;
 	 public  boolean removeSet (String key) throws InterruptedException, ExecutionException;
 
@@ -26,7 +26,7 @@ public interface clientAPI {
 
 
 	 
-	 public Future<MyList> searchElement (String field, String value);
+	 public Future<List> searchElement (String field, String value);
 	 public Future<MyList> searchEntry (Map<String, String> set);
 
 	 public Future<MyListEntry> orderEntrys (String field);//crescente ou acrescentar flag

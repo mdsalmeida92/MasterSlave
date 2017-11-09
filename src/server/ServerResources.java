@@ -61,8 +61,7 @@ public class ServerResources {
 	@GET
 	@Path("/{key}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MyEntry getEntry(@PathParam("key") String key) {
-
+	public MyEntry getEntry(@PathParam("key") String key) throws InterruptedException {
 
 		try (Jedis jedis = jedisPool.getResource()) {
 			Map<String, String> map = jedis.hgetAll(key);

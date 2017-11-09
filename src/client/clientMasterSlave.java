@@ -6,7 +6,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.client.Client;
@@ -40,7 +43,7 @@ public class clientMasterSlave implements clientAPI{
 	}
 
 		@Override
-		public Future<MyEntry> getSet(String key) throws InterruptedException, ExecutionException {
+		public Future<Map<String,String>> getSet(String key) throws InterruptedException, ExecutionException {
 	
 	
 			Future<MyEntry> entry = target.path("server/"+key)
@@ -49,21 +52,15 @@ public class clientMasterSlave implements clientAPI{
 					.async()
 					.get(MyEntry.class);
 			
-			return entry;
+			ExecutorService executor = Executors.newFixedThreadPool(1);
+			Future<Map<String,String>> future = executor.submit(new Callable<Map<String,String>>() {
+		         public Map<String,String> call() throws InterruptedException, ExecutionException {
+		             return entry.get().getAttributes();
+		         }});
+			
+			
+			return future;
 		}
-
-
-//	@Override
-//	public Map<String, String> getSet(String key) throws InterruptedException, ExecutionException {
-//
-//		//target.path("getSet/"+key).request().async().get()
-//
-//		String entry = target.path("server/"+key)
-//				.request()
-//				.get(String.class);
-//
-//		return null;
-//	}
 
 
 	@Override
@@ -146,13 +143,22 @@ public class clientMasterSlave implements clientAPI{
 	}
 
 	@Override
-	public Future<MyList> searchElement(String field, String value) {
+	public Future<List> searchElement(String field, String value) {
 		Future<MyList> list = target.queryParam("field", field).queryParam("value", value).path("server/searchElement/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)				
 				.async()
 				.get(MyList.class);
-		return list;
+		
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		Future<List> future = executor.submit(new Callable<List>() {
+	         public List call() throws InterruptedException, ExecutionException {
+	             return list.get().getList();
+	         }});
+		
+		
+		return future;
+
 	}
 
 	@Override
