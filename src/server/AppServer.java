@@ -21,6 +21,7 @@ public class AppServer {
 		ResourceConfig config = new ResourceConfig();
 		config.register( new ServerResources());
 		
+
 		JdkHttpServerFactory.createHttpServer(baseUri, config);
 		System.err.println("Server ready @ " + baseUri + " : local IP = " + InetAddress.getLocalHost().getHostAddress());
 

@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -37,35 +39,54 @@ public class clientMasterSlave implements clientAPI{
 		target = client.target(baseURI);
 	}
 
+		@Override
+		public Future<MyEntry> getSet(String key) throws InterruptedException, ExecutionException {
+	
+	
+			Future<MyEntry> entry = target.path("server/"+key)
+					.request()
+					.accept(MediaType.APPLICATION_JSON)
+					.async()
+					.get(MyEntry.class);
+			
+			return entry;
+		}
+
+
+//	@Override
+//	public Map<String, String> getSet(String key) throws InterruptedException, ExecutionException {
+//
+//		//target.path("getSet/"+key).request().async().get()
+//
+//		String entry = target.path("server/"+key)
+//				.request()
+//				.get(String.class);
+//
+//		return null;
+//	}
+
+
 	@Override
-	public Map<String, String> getSet(String key) {
-
-		//target.path("getSet/"+key).request().async().get()
-
-		MyEntry entry = target.path("server/"+key)
-				.request()
-				.accept(MediaType.APPLICATION_JSON)
-				.get(MyEntry.class);
-		return entry.getAttributes();
-	}
-
-
-	@Override
-	public String addSet(String key, Map<String, String> set) {
+	public String addSet(String key, Map<String, String> set) throws InterruptedException, ExecutionException {
 
 		MyEntry entry = new MyEntry(set);
 		Response response = target.path("server/"+key)
 				.request()
 				.post( Entity.entity( entry, MediaType.APPLICATION_JSON));
+		System.out.println("insert " + key + " " +response.getStatus());
+
 		return null;
 	}
 
-	@Override
-	public boolean removeSet(String key) {
 
-		Response response = target.path("server/"+key)
-				.request()
+
+	@Override
+	public boolean removeSet(String key) throws InterruptedException, ExecutionException {
+
+		Future<Response>  response = target.path("server/"+key)
+				.request().async()
 				.delete();
+		System.out.println("delete " + key + " " +response.get().getStatus());
 		return true;
 	}
 
@@ -98,92 +119,98 @@ public class clientMasterSlave implements clientAPI{
 	}
 
 	@Override
-	public int sum(String key1, String field, String key2) {
+	public Future<Integer> sum(String key1, String field, String key2) {
 
-		int response = target.queryParam("key1", key1).queryParam("key2", key2).queryParam("field", field).path("server/sum/")
-				.request()
+		Future<Integer> response = target.queryParam("key1", key1).queryParam("key2", key2).queryParam("field", field).path("server/sum/")
+				.request().async()
 				.get(Integer.class);
 		return response;
 	}
 
 	@Override
-	public int multConst(String key, String field, int constant) {
+	public Future<Integer> multConst(String key, String field, int constant) {
 
-		int response = target.queryParam("key", key).queryParam("const", constant).queryParam("field", field).path("server/multConst/")
-				.request()
+		Future<Integer> response = target.queryParam("key", key).queryParam("const", constant).queryParam("field", field).path("server/multConst/")
+				.request().async()
 				.get(Integer.class);
 		return response;
 	}
 
 	@Override
-	public int mult(String key1, String field, String key2) {
+	public Future<Integer> mult(String key1, String field, String key2) {
 
-		int response = target.queryParam("key1", key1).queryParam("key2", key2).queryParam("field", field).path("server/mult/")
-				.request()
+		Future<Integer> response = target.queryParam("key1", key1).queryParam("key2", key2).queryParam("field", field).path("server/mult/")
+				.request().async()
 				.get(Integer.class);
 		return response;
 	}
 
 	@Override
-	public List<String> searchElement(String field, String value) {
-		MyList list = target.queryParam("field", field).queryParam("value", value).path("server/searchElement/")
+	public Future<MyList> searchElement(String field, String value) {
+		Future<MyList> list = target.queryParam("field", field).queryParam("value", value).path("server/searchElement/")
 				.request()
-				.accept(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)				
+				.async()
 				.get(MyList.class);
-		return list.getList();
+		return list;
 	}
 
 	@Override
-	public List<String> searchEntry(Map<String, String> set) {
+	public Future<MyList> searchEntry(Map<String, String> set) {
 
 		List<String> l = new LinkedList<String>();
 		set.forEach((k, v) -> l.add(k+":"+v));
 
-		MyList list = target.queryParam("query", l.toArray()).path("server/searchEntrys/")
+		Future<MyList> list = target.queryParam("query", l.toArray()).path("server/searchEntrys/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
+				.async()
 				.get(MyList.class);
-		return list.getList();
+		return list;
 	}
 
 	@Override
-	public List<MyEntry> orderEntrys(String field) {
+	public Future<MyListEntry> orderEntrys(String field) {
 
 
-		MyListEntry list = target.queryParam("query", field).path("server/orderEntrys/")
+		Future<MyListEntry> list = target.queryParam("query", field).path("server/orderEntrys/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
+				.async()
 				.get(MyListEntry.class);
-		return list.getList();
+		return list;
 	}
 
 	@Override
-	public List<MyEntry> searchGreaterThan(String field, int value) {
+	public Future<MyListEntry> searchGreaterThan(String field, int value) {
 
-		MyListEntry list = target.queryParam("field", field).queryParam("value", value).path("server/searchGreaterThan/")
+		Future<MyListEntry> list = target.queryParam("field", field).queryParam("value", value).path("server/searchGreaterThan/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
+				.async()
 				.get(MyListEntry.class);
-		return list.getList();
+		return list;
 	}
 
 	@Override
-	public List<MyEntry> searchLesserThan(String field, int value) {
-		MyListEntry list = target.queryParam("field", field).queryParam("value", value).path("server/searchLesserThan/")
+	public Future<MyListEntry> searchLesserThan(String field, int value) {
+		Future<MyListEntry> list = target.queryParam("field", field).queryParam("value", value).path("server/searchLesserThan/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
+				.async()
 				.get(MyListEntry.class);
-		return list.getList();
+		return list;
 	}
 
 	@Override
-	public boolean valuegreaterThan(String key1, String field, String key2) {
-		
-		MyBoolean isGreater = target.queryParam("key1", key1).queryParam("field", field).queryParam("key2", key2).path("server/valuegreaterThan/")
+	public Future<MyBoolean> valuegreaterThan(String key1, String field, String key2) {
+
+		Future<MyBoolean> isGreater = target.queryParam("key1", key1).queryParam("field", field).queryParam("key2", key2).path("server/valuegreaterThan/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
+				.async()
 				.get(MyBoolean.class);
-		return isGreater.isMyboolean();
+		return isGreater;
 	}
 
 

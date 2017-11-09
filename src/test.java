@@ -1,6 +1,9 @@
 import API.clientAPI;
 import client.clientMasterSlave;
+import utils.MyBoolean;
 import utils.MyEntry;
+import utils.MyList;
+import utils.MyListEntry;
 
 import java.awt.event.ItemEvent;
 import java.util.HashMap;
@@ -8,10 +11,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class test {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException, ExecutionException {
 
 		clientAPI client= new clientMasterSlave("http://localhost:8080/");
 		Map<String,String> map = new HashMap<String,String>();
@@ -45,47 +50,55 @@ public class test {
 		searchGreaterThanTest(client, map, map2, map3);
 		searchLesserThanTest(client, map, map2, map3);
 		isGreaterThanTest(client, map, map2);
+		
+		System.err.println("acabou");
 
 	}
 
-	static void addGetTest(clientAPI client, Map<String,String> map){
+	static void addGetTest(clientAPI client, Map<String,String> map) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
-		Map<String,String> mapGET =  client.getSet("ola1005");
+	//	Thread.sleep(10000);
+		Future<MyEntry>  myEntry =  client.getSet("ola1005");
+		MyEntry m = myEntry.get();
+		Map<String,String> mapGET = m.getAttributes();
 		assert map.equals(mapGET);
 		client.removeSet("ola1005");
 
 
 	}
 
-	static void addElementTest(clientAPI client, Map<String,String> map){
+	static void addElementTest(clientAPI client, Map<String,String> map) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addElement("ola1005", "newfield", "something");
 		Map<String,String> newmap = map;
 		newmap.put("newfield", "something");
-		Map<String,String> mapGET =  client.getSet("ola1005");
+		Future<MyEntry>  myEntry =  client.getSet("ola1005");
+		Map<String,String> mapGET = myEntry.get().getAttributes();
 		client.removeSet("ola1005");
 		assert newmap.equals(mapGET);
 
 
 	}
 
-	static void removeTest(clientAPI client, Map<String,String> map){
+	static void removeTest(clientAPI client, Map<String,String> map) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.removeSet("ola1005");
-		Map<String,String> mapGET =  client.getSet("ola1005");
+		Future<MyEntry>  myEntry =  client.getSet("ola1005");
+		Map<String,String> mapGET = myEntry.get().getAttributes();
 		assert mapGET.isEmpty();
 
 
 	}
 
-	static void incrTest(clientAPI client, Map<String,String> map){
+	static void incrTest(clientAPI client, Map<String,String> map) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.incr("ola1005", "field4");
-		Map<String,String> mapGET =  client.getSet("ola1005");
+		Future<MyEntry>  myEntry =  client.getSet("ola1005");
+		Map<String,String> mapGET = myEntry.get().getAttributes();
 		client.removeSet("ola1005");
 		assert Integer.valueOf(map.get("field4")) +1 ==   Integer.valueOf(mapGET.get("field4"));
 
@@ -93,58 +106,65 @@ public class test {
 
 	}
 
-	static void sumTest(clientAPI client, Map<String,String> map, Map<String,String> map2){
+	static void sumTest(clientAPI client, Map<String,String> map, Map<String,String> map2) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
-		int value = client.sum("ola1005", "field4", "ola1006");
+		Future<Integer> value = client.sum("ola1005", "field4", "ola1006");
+		
+		long v = value.get();
+		System.out.println(v);
+		assert v == 6;
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
-		assert value == 6;
 
 
 
 	}
 
-	static void sumConstTest(clientAPI client, Map<String,String> map){
+	static void sumConstTest(clientAPI client, Map<String,String> map) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
-		int value = client.multConst("ola1005", "field4", 6);
+		Future<Integer> value = client.multConst("ola1005", "field4", 6);
+		
+		assert value.get() == 6;
 		client.removeSet("ola1005");
-		assert value == 6;
 
 
 
 	}
 
-	static void multTest(clientAPI client, Map<String,String> map, Map<String,String> map2){
-
-		client.addSet("ola1005", map);
-		client.addSet("ola1006", map2);
-		int value = client.mult("ola1005", "field4", "ola1006");
-		client.removeSet("ola1005");
-		client.removeSet("ola1006");
-		assert value == 5;
-
-
-	}
-
-	static void searchElemTest(clientAPI client, Map<String,String> map, Map<String,String> map2){
+	static void multTest(clientAPI client, Map<String,String> map, Map<String,String> map2) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
-		List<String> list = client.searchElement("field2", "World");
+		Future<Integer> value = client.mult("ola1005", "field4", "ola1006");
+		
+		assert value.get() == 5;
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
 
-		assert list.contains("ola1005");
+
+	}
+
+	static void searchElemTest(clientAPI client, Map<String,String> map, Map<String,String> map2) throws InterruptedException, ExecutionException{
+
+		client.addSet("ola1005", map);
+		client.addSet("ola1006", map2);
+		Future<MyList> list = client.searchElement("field2", "World");
+		
+		
+
+		assert list.get().getList().contains("ola1005");
+		client.removeSet("ola1005");
+		client.removeSet("ola1006");
 
 
 
 
 	}
 
-	static void searchEntriesTest(clientAPI client, Map<String,String> map, Map<String,String> map2){
+	static void searchEntriesTest(clientAPI client, Map<String,String> map, Map<String,String> map2) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
@@ -152,87 +172,95 @@ public class test {
 		mapTemp.put("field1", "Hello");
 		mapTemp.put("field2", "World");
 		//mapTemp.put("field4", "5");
-		List<String> list = client.searchEntry(mapTemp);
+		Future<MyList> list = client.searchEntry(mapTemp);
+		
+
+
+		assert list.get().getList().contains("ola1005");
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
 
 
-		assert list.contains("ola1005");
-
-
 	}
 
-	static void orderEntrysTest(clientAPI client, Map<String,String> map, Map<String,String> map2, Map<String,String> map3){
+	static void orderEntrysTest(clientAPI client, Map<String,String> map, Map<String,String> map2, Map<String,String> map3) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
 		client.addSet("ola1007", map3);
 
 
-		List<MyEntry> list = client.orderEntrys("field4");
+		Future<MyListEntry> list = client.orderEntrys("field4");
 		List<String> keys = new LinkedList<>();
 		keys.add("ola1005");
 		keys.add("ola1006");
 		keys.add("ola1007");
-		client.removeSet("ola1005");
-		client.removeSet("ola1006");
-		client.removeSet("ola1007");
+		
+		List<MyEntry> l = list.get().getList();
 
 		Iterator<String> it = keys.iterator();
-		for (Iterator<MyEntry> iterator = list.iterator()  ; iterator.hasNext() && it.hasNext();) {
+		for (Iterator<MyEntry> iterator = l.iterator()  ; iterator.hasNext() && it.hasNext();) {
 			MyEntry myEntry = iterator.next();
 			String string = it.next();
 			assert string.equals(myEntry.getKey());
 		}
+		client.removeSet("ola1005");
+		client.removeSet("ola1006");
+		client.removeSet("ola1007");
 	}
 	
-	static void searchGreaterThanTest(clientAPI client, Map<String,String> map, Map<String,String> map2, Map<String,String> map3){
+	static void searchGreaterThanTest(clientAPI client, Map<String,String> map, Map<String,String> map2, Map<String,String> map3) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
 		client.addSet("ola1007", map3);
 
 
-		List<MyEntry> list = client.searchGreaterThan("field4", 5);
+		Future<MyListEntry> list = client.searchGreaterThan("field4", 5);
 
-		client.removeSet("ola1005");
-		client.removeSet("ola1006");
-		client.removeSet("ola1007");
-
-		for (Iterator<MyEntry> iterator = list.iterator()  ; iterator.hasNext();) {
+		
+		List<MyEntry> l = list.get().getList();
+		for (Iterator<MyEntry> iterator = l.iterator()  ; iterator.hasNext();) {
 			MyEntry myEntry = iterator.next();
 			assert "ola1007".equals(myEntry.getKey());
 		}
+		client.removeSet("ola1005");
+		client.removeSet("ola1006");
+		client.removeSet("ola1007");
+
 	}
 	
-	static void searchLesserThanTest(clientAPI client, Map<String,String> map, Map<String,String> map2, Map<String,String> map3){
+	static void searchLesserThanTest(clientAPI client, Map<String,String> map, Map<String,String> map2, Map<String,String> map3) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
 		client.addSet("ola1007", map3);
 
 
-		List<MyEntry> list = client.searchLesserThan("field4", 5);
+		Future<MyListEntry> list = client.searchLesserThan("field4", 5);
 
-		client.removeSet("ola1005");
-		client.removeSet("ola1006");
-		client.removeSet("ola1007");
+		
+		
+		List<MyEntry> l = list.get().getList();
 
-		for (Iterator<MyEntry> iterator = list.iterator()  ; iterator.hasNext();) {
+		for (Iterator<MyEntry> iterator = l.iterator()  ; iterator.hasNext();) {
 			MyEntry myEntry = iterator.next();
 			assert "ola1005".equals(myEntry.getKey());
 		}
+		client.removeSet("ola1005");
+		client.removeSet("ola1006");
+		client.removeSet("ola1007");
 	}
 	
-	static void isGreaterThanTest(clientAPI client, Map<String,String> map, Map<String,String> map2){
+	static void isGreaterThanTest(clientAPI client, Map<String,String> map, Map<String,String> map2) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
-		boolean isGreaterThan = client.valuegreaterThan("ola1005", "field4", "ola1006");
+		Future<MyBoolean> isGreaterThan = client.valuegreaterThan("ola1005", "field4", "ola1006");
+		
+		assert !(isGreaterThan.get().isMyboolean());
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
-		assert !isGreaterThan;
-
 
 	}
 

@@ -12,8 +12,10 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -46,6 +48,7 @@ import utils.MyListEntry;
 public class ServerResources {
 	public JedisPool jedisPool ;
 
+
 	public ServerResources(){
 		jedisPool = new JedisPool(new JedisPoolConfig(), "localhost", 6379);
 		Jedis jedis= jedisPool.getResource();
@@ -58,35 +61,36 @@ public class ServerResources {
 	@GET
 	@Path("/{key}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MyEntry getEntry( @PathParam("key") String key) {
+	public MyEntry getEntry(@PathParam("key") String key) {
+
 
 		try (Jedis jedis = jedisPool.getResource()) {
-		    Map<String, String> map = jedis.hgetAll(key);
+			Map<String, String> map = jedis.hgetAll(key);
 			MyEntry entry = new MyEntry(map);
 			return entry;
 		}
 
 
 	}
-	
 
 
-	@POST
-	@Path("/{key}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public void putEntry(@PathParam("key") String key, MyEntry entry) {
 
-		try (Jedis jedis = jedisPool.getResource()) {
-		System.out.println(key);
-		Map<String,String> map = entry.getAttributes();
-		jedis.hmset(key, map);
-		map.forEach((k, v) -> {
-			jedis.sadd(":"+k+":", key);
-			jedis.sadd(k+":"+v, key);});
-		}
+	@POST 
+	@Path("/{key}") 
+	@Consumes(MediaType.APPLICATION_JSON) 
+	public void putEntry(@PathParam("key") String key, MyEntry entry) throws InterruptedException { 
 
-
+		try (Jedis jedis = jedisPool.getResource()) { 
+			Map<String,String> map = entry.getAttributes(); 
+			jedis.hmset(key, map); 
+			map.forEach((k, v) -> { 
+				jedis.sadd(":"+k+":", key); 
+				jedis.sadd(k+":"+v, key);}); 
+		} 
 	}
+
+
+
 
 	@DELETE
 	@Path("/{key}")
@@ -136,12 +140,19 @@ public class ServerResources {
 	public long sum(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
-		try (Jedis jedis = jedisPool.getResource()) {
-			long value1 = Integer.valueOf(jedis.hget(key1, field));
-			long value2 = Integer.valueOf(jedis.hget(key2, field));
-			return value1+value2;
+		try {
+			try (Jedis jedis = jedisPool.getResource()) {
+				long value1 = Integer.valueOf(jedis.hget(key1, field));
+				long value2 = Integer.valueOf(jedis.hget(key2, field));
+				return value1+value2;
 
+			}
+			
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
 		}
+		return 0;
+
 
 
 	}
