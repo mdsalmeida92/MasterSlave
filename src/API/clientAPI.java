@@ -36,6 +36,24 @@ public interface clientAPI {
 	public Future<Boolean> valuegreaterThan(String key1, String field, String key2);
 
 	public void Close();
-
+	public long getServerputTime();
+	public long getServergetTime() ;
+	public long getServerremoveTime();
+	public long getServerupdateTime() ;
+	public long getServerincrTime();
+	public long getServersumTime();
+	public long getServersumConstTime();
+	public long getServermultTime();
+	public long getServersearchElemTime();
+	public long getServersearchEntrysTime();
+	public long getServerorderEntrysTime();
+	public long getServersearchGreaterTime();
+	public long getServersearchLesserTime();
+	public long getServervalueGreaterTime();
+	
+	
+	
+	
+	
 
 }

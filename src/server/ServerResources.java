@@ -1,6 +1,7 @@
 
 package server;
 
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,13 +48,41 @@ import utils.MyListEntry;
 @Path("/server")
 public class ServerResources {
 	public JedisPool jedisPool ;
-
+	private long putTime;
+	private long getTime;
+	private long removeTime;
+	private long updateTime;
+	private long incrTime;
+	private long sumTime;
+	private long sumConstTime;
+	private long multTime;
+	private long searchElemTime;
+	private long searchEntrysTime;
+	private long orderEntrysTime;
+	private long searchGreaterTime;
+	private long searchLesserTime;
+	private long valueGreaterTime;
 
 	public ServerResources(){
 		jedisPool = new JedisPool(new JedisPoolConfig(), "localhost", 6379);
 		Jedis jedis= jedisPool.getResource();
 		jedis.connect();
 		jedis.flushAll();
+		putTime = 0;
+		getTime= 0;
+		removeTime= 0;
+		updateTime= 0;
+		incrTime= 0;
+		sumTime= 0;
+		sumConstTime= 0;
+		multTime= 0;
+		searchElemTime= 0;
+		searchEntrysTime= 0;
+		orderEntrysTime= 0;
+		searchGreaterTime= 0;
+		searchLesserTime= 0;
+		valueGreaterTime= 0;
+
 		System.out.println(jedis.ping());
 	}
 
@@ -63,22 +92,23 @@ public class ServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyEntry getEntry(@PathParam("key") String key) throws InterruptedException {
 
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			Map<String, String> map = jedis.hgetAll(key);
 			MyEntry entry = new MyEntry(map);
+			getTime += getTime() - begin;
 			return entry;
 		}
 
 
+
 	}
-
-
 
 	@POST 
 	@Path("/{key}") 
 	@Consumes(MediaType.APPLICATION_JSON) 
 	public void putEntry(@PathParam("key") String key, MyEntry entry) throws InterruptedException { 
-
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) { 
 			Map<String,String> map = entry.getAttributes(); 
 			jedis.hmset(key, map); 
@@ -86,20 +116,22 @@ public class ServerResources {
 				jedis.sadd(":"+k+":", key); 
 				jedis.sadd(k+":"+v, key);}); 
 		} 
+		putTime += getTime() - begin;
 	}
-
-
-
 
 	@DELETE
 	@Path("/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void removeEntry(@PathParam("key") String key) {
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			Map<String, String> map = jedis.hgetAll(key);
-			map.forEach((k, v) -> jedis.srem(k+":"+v, key));
+			map.forEach((k, v) ->{ 
+				jedis.srem(k+":"+v, key);
+				jedis.srem(":"+k+":");});
 			jedis.del(key);
 		}
+		removeTime +=  getTime() - begin;
 
 
 	}
@@ -108,6 +140,7 @@ public class ServerResources {
 	@Path("/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void updateEntry(@PathParam("key") String key, Element element) {
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			if ( ! jedis.exists(key))
 				throw new WebApplicationException(  );
@@ -116,13 +149,14 @@ public class ServerResources {
 				jedis.hset(key, element.getField(), element.getElement());
 
 		}
-
+		updateTime += getTime() - begin;
 	}
 
 	@PUT
 	@Path("/incr/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void incr(@PathParam("key") String key, Element value) {
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			if ( ! jedis.exists(key))
 				throw new WebApplicationException(  );
@@ -130,6 +164,7 @@ public class ServerResources {
 
 				jedis.hincrBy(key, value.getField(), Integer.valueOf(value.getElement()));
 		}
+		incrTime += getTime() - begin;
 
 	}
 
@@ -139,14 +174,16 @@ public class ServerResources {
 	public long sum(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
+		long begin = getTime();
 		try {
 			try (Jedis jedis = jedisPool.getResource()) {
 				long value1 = Integer.valueOf(jedis.hget(key1, field));
 				long value2 = Integer.valueOf(jedis.hget(key2, field));
+				sumTime += getTime() - begin;
 				return value1+value2;
 
 			}
-			
+
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 		}
@@ -162,8 +199,10 @@ public class ServerResources {
 	public long sumConst(@QueryParam("key") String key, 
 			@QueryParam("field")  String field, 
 			@QueryParam("const") int constant) {
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			long value = Integer.valueOf(jedis.hget(key, field));
+			sumConstTime += getTime() - begin;
 			return value*constant;
 
 		}
@@ -177,9 +216,11 @@ public class ServerResources {
 	public long mult(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			long value1 = Integer.valueOf(jedis.hget(key1, field));
 			long value2 = Integer.valueOf(jedis.hget(key2, field));
+			multTime += getTime() - begin;
 			return value1*value2;
 		}		
 
@@ -192,20 +233,22 @@ public class ServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyList searchElement( @QueryParam("field")  String field, 
 			@QueryParam("value") String value) {
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			List<String> l = jedis.smembers(field+":"+value).stream().collect(Collectors.toList());
 			MyList list = new MyList(l);
+			searchElemTime += getTime() - begin;
 			return list;
 		}
 
 
 	}
 
-
 	@GET
 	@Path("/searchEntrys")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyList searchEntrys( @QueryParam("query")  List<String>  query) {
+		long begin = getTime();
 
 		try (Jedis jedis = jedisPool.getResource()) {
 			String string = null;
@@ -222,16 +265,17 @@ public class ServerResources {
 			}
 			List<String> l = set.stream().collect(Collectors.toList());
 			MyList list = new MyList(l);
+			searchEntrysTime += getTime() - begin;
 			return list;
 		}
 
 	}
 
-
 	@GET
 	@Path("/orderEntrys")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyListEntry orderEntrys( @QueryParam("query")  String field) {
+		long begin = getTime();
 
 		try (Jedis jedis = jedisPool.getResource()) {
 			Comparator<MyEntry> comparator = new Comparator<MyEntry>() {
@@ -252,6 +296,7 @@ public class ServerResources {
 			});
 
 			MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			orderEntrysTime += getTime() - begin;
 			return list;
 		}
 
@@ -261,6 +306,7 @@ public class ServerResources {
 	@Path("/searchGreaterThan")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyListEntry searchGreaterThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			Set<String> set = jedis.smembers(":"+field+":");
 			Set<MyEntry> s = new HashSet<MyEntry>();
@@ -272,6 +318,7 @@ public class ServerResources {
 			});
 
 			MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			searchGreaterTime+= getTime() - begin;
 			return list;
 		}
 
@@ -282,6 +329,7 @@ public class ServerResources {
 	@Path("/searchLesserThan")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyListEntry searchLesserThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
+		long begin = getTime();
 
 		try (Jedis jedis = jedisPool.getResource()) {
 			Set<String> set = jedis.smembers(":"+field+":");
@@ -294,6 +342,7 @@ public class ServerResources {
 			});
 
 			MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			searchLesserTime+= getTime() - begin;
 			return list;
 		}
 
@@ -305,21 +354,133 @@ public class ServerResources {
 	public MyBoolean valuegreaterThan(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
+		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			long value1 = Integer.valueOf(jedis.hget(key1, field));
 			long value2 = Integer.valueOf(jedis.hget(key2, field));
 
 			MyBoolean isGreater = new MyBoolean(value1>value2);
+			valueGreaterTime+= getTime() - begin;
 			return isGreater;
 
 		}
 
-
-
-
-
+	}
+	
+	@GET
+	@Path("/getTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long getTimes() {
+		return getTime;
+	}
+	
+	@GET
+	@Path("/putTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long putTime() {
+		return putTime;
 	}
 
+
+	
+	@GET
+	@Path("/removeTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long removeTime() {
+		return removeTime;
+	}
+
+	
+	@GET
+	@Path("/updateTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long updateTime() {
+		return updateTime;
+	}
+
+	
+	@GET
+	@Path("/incrTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long incrTime() {
+		return incrTime;
+	}
+
+	
+	@GET
+	@Path("/sumTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long sumTime() {
+		return sumTime;
+	}
+
+	
+	@GET
+	@Path("/sumConstTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long sumConstTime() {
+		return sumConstTime;
+	}
+
+	
+	@GET
+	@Path("/multTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long multTime() {
+		return multTime;
+	}
+
+	
+	@GET
+	@Path("/searchElemTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long searchElemTime() {
+		return searchElemTime;
+	}
+
+	
+	@GET
+	@Path("/searchEntrysTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long searchEntrysTime() {
+		return searchEntrysTime;
+	}
+
+	
+	@GET
+	@Path("/orderEntrysTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long orderEntrysTime() {
+		return orderEntrysTime;
+	}
+
+	
+	@GET
+	@Path("/searchGreaterTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long searchGreaterTime() {
+		return searchGreaterTime;
+	}
+
+	
+	@GET
+	@Path("/searchLesserTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long searchLesserTime() {
+		return searchLesserTime;
+	}
+
+	
+	@GET
+	@Path("/valueGreaterTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long valueGreaterTime() {
+		return valueGreaterTime;
+	}
+
+	private long getTime() {
+		return Calendar.getInstance().getTimeInMillis();
+	}
 
 
 }

@@ -1,6 +1,7 @@
 package client;
 
 import java.net.URI;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -35,6 +36,7 @@ public class clientMasterSlave implements clientAPI{
 
 	WebTarget target;
 	Client client;
+	
 
 	public clientMasterSlave(String targelUrl) {
 		ClientConfig config = new ClientConfig();
@@ -47,25 +49,28 @@ public class clientMasterSlave implements clientAPI{
 	public void Close() {
 		client.close();
 	}
-		@Override
-		public Future<Map<String,String>> getSet(String key) throws InterruptedException, ExecutionException {
 	
-	
-			Future<MyEntry> entry = target.path("server/"+key)
-					.request()
-					.accept(MediaType.APPLICATION_JSON)
-					.async()
-					.get(MyEntry.class);
-			
-			ExecutorService executor = Executors.newFixedThreadPool(1);
-			Future<Map<String,String>> future = executor.submit(new Callable<Map<String,String>>() {
-		         public Map<String,String> call() throws InterruptedException, ExecutionException {
-		             return entry.get().getAttributes();
-		         }});
-			
-			 executor.shutdown();
-			return future;
-		}
+	@Override
+	public Future<Map<String,String>> getSet(String key) throws InterruptedException, ExecutionException {
+
+		
+		Future<MyEntry> entry = target.path("server/"+key)
+				.request()
+				.accept(MediaType.APPLICATION_JSON)
+				.async()
+				.get(MyEntry.class);
+
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		Future<Map<String,String>> future = executor.submit(new Callable<Map<String,String>>() {
+			public Map<String,String> call() throws InterruptedException, ExecutionException {
+				return entry.get().getAttributes();
+			}});
+
+		executor.shutdown();
+		
+		return future;
+	}
+
 
 
 	@Override
@@ -75,10 +80,9 @@ public class clientMasterSlave implements clientAPI{
 		Response response = target.path("server/"+key)
 				.request()
 				.post( Entity.entity( entry, MediaType.APPLICATION_JSON));
-		System.out.println("insert " + key + " " +response.getStatus());
-
 		return null;
 	}
+	
 
 
 
@@ -88,7 +92,6 @@ public class clientMasterSlave implements clientAPI{
 		Response  response = target.path("server/"+key)
 				.request()
 				.delete();
-		System.out.println("delete " + key + " " +response.getStatus());
 		return true;
 	}
 
@@ -154,7 +157,7 @@ public class clientMasterSlave implements clientAPI{
 				.accept(MediaType.APPLICATION_JSON)				
 				.async()
 				.get(MyList.class);
-		
+
 		return FutureGetListString(list);
 
 	}
@@ -170,7 +173,7 @@ public class clientMasterSlave implements clientAPI{
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyList.class);
-		
+
 		return FutureGetListString(list);
 	}
 
@@ -183,7 +186,7 @@ public class clientMasterSlave implements clientAPI{
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyListEntry.class);
-		
+
 		return FutureGetListMyEntry(list);
 	}
 
@@ -195,7 +198,7 @@ public class clientMasterSlave implements clientAPI{
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyListEntry.class);
-		
+
 		return FutureGetListMyEntry(list);
 	}
 
@@ -206,7 +209,7 @@ public class clientMasterSlave implements clientAPI{
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyListEntry.class);
-		
+
 		return FutureGetListMyEntry(list);
 
 	}
@@ -219,40 +222,185 @@ public class clientMasterSlave implements clientAPI{
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
 				.get(MyBoolean.class);
-		
+
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		Future<Boolean> future = executor.submit(new Callable<Boolean>() {
-	         public Boolean call() throws InterruptedException, ExecutionException {
-	             return isGreater.get().isMyboolean();
-	         }});
+			public Boolean call() throws InterruptedException, ExecutionException {
+				return isGreater.get().isMyboolean();
+			}});
 		executor.shutdown();
-		
+
 		return future;
 	}
 
-	
+
 	private Future<List<MyEntry>> FutureGetListMyEntry(Future<MyListEntry> list) {
-		
+
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		Future<List<MyEntry>> future = executor.submit(new Callable<List<MyEntry>>() {
-	         public List<MyEntry> call() throws InterruptedException, ExecutionException {
-	             return list.get().getList();
-	         }});
+			public List<MyEntry> call() throws InterruptedException, ExecutionException {
+				return list.get().getList();
+			}});
 		executor.shutdown();
-		
+
+		return future;
+	}
+
+	private Future<List<String>> FutureGetListString(Future<MyList> list) {
+
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		Future<List<String>> future = executor.submit(new Callable<List<String>>() {
+			public List<String> call() throws InterruptedException, ExecutionException {
+				return list.get().getList();
+			}});
+		executor.shutdown();
+
 		return future;
 	}
 	
-	private Future<List<String>> FutureGetListString(Future<MyList> list) {
+	private long getTime() {
+		return Calendar.getInstance().getTimeInMillis();
+	}
+	
+	public long getServerputTime() {
 		
-		ExecutorService executor = Executors.newFixedThreadPool(1);
-		Future<List<String>> future = executor.submit(new Callable<List<String>>() {
-	         public List<String> call() throws InterruptedException, ExecutionException {
-	             return list.get().getList();
-	         }});
-		executor.shutdown();
+		long result = target.path("server/putTime/")
+				.request()
+				.get(Integer.class);
 		
-		return future;
+		return result;
+		
+	}
+	
+
+	public long getServergetTime() {
+		
+		long result = target.path("server/getTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServerremoveTime() {
+		
+		long result = target.path("server/removeTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServerupdateTime() {
+		
+		long result = target.path("server/updateTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServerincrTime() {
+		
+		long result = target.path("server/incrTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServersumTime() {
+		
+		long result = target.path("server/sumTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServersumConstTime() {
+		
+		long result = target.path("server/sumConstTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServermultTime() {
+		
+		long result = target.path("server/multTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServersearchElemTime() {
+		
+		long result = target.path("server/searchElemTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServersearchEntrysTime() {
+		
+		long result = target.path("server/searchEntrysTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServerorderEntrysTime() {
+		
+		long result = target.path("server/orderEntrysTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServersearchGreaterTime() {
+		
+		long result = target.path("server/searchGreaterTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServersearchLesserTime() {
+		
+		long result = target.path("server/searchLesserTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
+	}
+
+	public long getServervalueGreaterTime() {
+		
+		long result = target.path("server/valueGreaterTime/")
+				.request()
+				.get(Integer.class);
+		
+		return result;
+		
 	}
 
 
