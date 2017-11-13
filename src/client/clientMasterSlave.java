@@ -80,6 +80,7 @@ public class clientMasterSlave implements clientAPI{
 		Response response = target.path("server/"+key)
 				.request()
 				.post( Entity.entity( entry, MediaType.APPLICATION_JSON));
+		response.getStatus();
 		return null;
 	}
 	
@@ -92,6 +93,7 @@ public class clientMasterSlave implements clientAPI{
 		Response  response = target.path("server/"+key)
 				.request()
 				.delete();
+		response.getStatus();
 		return true;
 	}
 
@@ -102,6 +104,7 @@ public class clientMasterSlave implements clientAPI{
 		Response response = target.path("server/"+key)
 				.request()
 				.put(Entity.entity( elem, MediaType.APPLICATION_JSON));
+		response.getStatus();
 
 		return null;
 	}
@@ -120,6 +123,7 @@ public class clientMasterSlave implements clientAPI{
 		Response response = target.path("server/incr/"+key)
 				.request()
 				.put(Entity.entity( elem, MediaType.APPLICATION_JSON));
+		response.getStatus();
 
 	}
 

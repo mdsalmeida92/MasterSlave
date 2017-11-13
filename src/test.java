@@ -23,19 +23,23 @@ public class test {
 		Map<String,String> map = new HashMap<String,String>();
 		map.put("field1", "Hello");
 		map.put("field2", "World");
-		map.put("field4", "1");
+		map.put("field3", "2");
+		map.put("field4", "5");
+		map.put("field5", "10");
 
 		Map<String,String> map2 = new HashMap<String,String>();
 		map2.put("field1", "Hell");
 		map2.put("field2", "Heaven");
-		map2.put("field4", "5");
-		;
+		map2.put("field3", "3");
+		map2.put("field4", "6");
+		map2.put("field5", "11");
 
 		Map<String,String> map3 = new HashMap<String,String>();
 		map3.put("field1", "bye");
 		map3.put("field2", "water");
-		map3.put("field4", "17");
-		;
+		map3.put("field3", "4");
+		map3.put("field4", "7");
+		map3.put("field5", "12");
 
 
 		addGetTest(client, map);
@@ -100,11 +104,11 @@ public class test {
 	static void incrTest(clientAPI client, Map<String,String> map) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
-		client.incr("ola1005", "field4");
+		client.incr("ola1005", "field3");
 		Future<Map<String,String>>  myEntry =  client.getSet("ola1005");
 		Map<String,String> mapGET = myEntry.get();
 		client.removeSet("ola1005");
-		assert Integer.valueOf(map.get("field4")) +1 ==   Integer.valueOf(mapGET.get("field4"));
+		assert Integer.valueOf(map.get("field3")) +1 ==   Integer.valueOf(mapGET.get("field3"));
 
 
 
@@ -114,10 +118,10 @@ public class test {
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
-		Future<Integer> value = client.sum("ola1005", "field4", "ola1006");
+		Future<Integer> value = client.sum("ola1005", "field3", "ola1006");
 
 		long v = value.get();
-		assert v == 6;
+		assert v == 5;
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
 
@@ -128,9 +132,9 @@ public class test {
 	static void sumConstTest(clientAPI client, Map<String,String> map) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
-		Future<Integer> value = client.multConst("ola1005", "field4", 6);
+		Future<Integer> value = client.multConst("ola1005", "field3", 6);
 
-		assert value.get() == 6;
+		assert value.get() == 12;
 		client.removeSet("ola1005");
 
 
@@ -143,7 +147,7 @@ public class test {
 		client.addSet("ola1006", map2);
 		Future<Integer> value = client.mult("ola1005", "field4", "ola1006");
 
-		assert value.get() == 5;
+		assert value.get() == 30;
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
 
@@ -172,10 +176,7 @@ public class test {
 		Map<String,String> mapTemp = new HashMap<String,String>();
 		mapTemp.put("field1", "Hello");
 		mapTemp.put("field2", "World");
-		//mapTemp.put("field4", "5");
 		Future<List<String>> list = client.searchEntry(mapTemp);
-
-
 
 		assert list.get().contains("ola1005");
 		client.removeSet("ola1005");
@@ -191,7 +192,7 @@ public class test {
 		client.addSet("ola1007", map3);
 
 
-		Future<List<MyEntry>> list = client.orderEntrys("field4");
+		Future<List<MyEntry>> list = client.orderEntrys("field5");
 		List<String> keys = new LinkedList<>();
 		keys.add("ola1005");
 		keys.add("ola1006");
@@ -217,7 +218,7 @@ public class test {
 		client.addSet("ola1007", map3);
 
 
-		Future<List<MyEntry>> list = client.searchGreaterThan("field4", 5);
+		Future<List<MyEntry>> list = client.searchGreaterThan("field5", 11);
 
 
 		List<MyEntry> l = list.get();
@@ -238,7 +239,7 @@ public class test {
 		client.addSet("ola1007", map3);
 
 
-		Future<List<MyEntry>> list = client.searchLesserThan("field4", 5);
+		Future<List<MyEntry>> list = client.searchLesserThan("field5", 11);
 
 
 
@@ -257,7 +258,7 @@ public class test {
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
-		Future<Boolean> isGreaterThan = client.valuegreaterThan("ola1005", "field4", "ola1006");
+		Future<Boolean> isGreaterThan = client.valuegreaterThan("ola1005", "field5", "ola1006");
 
 		assert !(isGreaterThan.get());
 		client.removeSet("ola1005");

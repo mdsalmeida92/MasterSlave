@@ -12,7 +12,7 @@ import utils.MyEntry;
 
 
 public class testTimes {
-	private static final double TOTAL_OPERATIONS = 10;
+	private static final double TOTAL_OPERATIONS = 200;
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
 
 		clientAPI client= new clientMasterSlave("http://localhost:8080/");
