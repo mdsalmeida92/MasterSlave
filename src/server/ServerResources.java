@@ -128,7 +128,7 @@ public class ServerResources {
 			Map<String, String> map = jedis.hgetAll(key);
 			map.forEach((k, v) ->{ 
 				jedis.srem(k+":"+v, key);
-				jedis.srem(":"+k+":");});
+				jedis.srem(":"+k+":", key);});
 			jedis.del(key);
 		}
 		removeTime +=  getTime() - begin;

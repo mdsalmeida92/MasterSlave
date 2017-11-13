@@ -35,10 +35,7 @@ public class testTimes {
 		long a = getTime();
 		client.getServergetTime();
 		System.out.println((getTime() - a) );
-		
-		a = getTime();
 
-		System.out.println((getTime() - a) );
 
 		addTest(client, map);
 		addElementTest(client);
