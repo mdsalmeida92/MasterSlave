@@ -182,39 +182,39 @@ public class clientMasterSlave implements clientAPI{
 	}
 
 	@Override
-	public Future<List<MyEntry>> orderEntrys(String field) {
+	public Future<List<String>> orderEntrys(String field) {
 
 
-		Future<MyListEntry> list = target.queryParam("query", field).path("server/orderEntrys/")
+		Future<MyList> list = target.queryParam("query", field).path("server/orderEntrys/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
-				.get(MyListEntry.class);
+				.get(MyList.class);
 
-		return FutureGetListMyEntry(list);
+		return FutureGetListString(list);
 	}
 
 	@Override
-	public Future<List<MyEntry>> searchGreaterThan(String field, int value) {
+	public Future<List<String>> searchGreaterThan(String field, int value) {
 
-		Future<MyListEntry> list = target.queryParam("field", field).queryParam("value", value).path("server/searchGreaterThan/")
+		Future<MyList> list = target.queryParam("field", field).queryParam("value", value).path("server/searchGreaterThan/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
-				.get(MyListEntry.class);
+				.get(MyList.class);
 
-		return FutureGetListMyEntry(list);
+		return FutureGetListString(list);
 	}
 
 	@Override
-	public Future<List<MyEntry>> searchLesserThan(String field, int value) {
-		Future<MyListEntry> list = target.queryParam("field", field).queryParam("value", value).path("server/searchLesserThan/")
+	public Future<List<String>> searchLesserThan(String field, int value) {
+		Future<MyList> list = target.queryParam("field", field).queryParam("value", value).path("server/searchLesserThan/")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
 				.async()
-				.get(MyListEntry.class);
+				.get(MyList.class);
 
-		return FutureGetListMyEntry(list);
+		return FutureGetListString(list);
 
 	}
 
@@ -405,6 +405,37 @@ public class clientMasterSlave implements clientAPI{
 		
 		return result;
 		
+	}
+
+
+	@Override
+	public Future<Boolean> elementContains(String key, String field, String word) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<String> searchEntryContainingWord(String key, String field, String word) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Integer> sumAll(String field) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Integer> multAll(String field) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getElement(String key) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

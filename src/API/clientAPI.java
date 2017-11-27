@@ -16,23 +16,28 @@ public interface clientAPI {
 	public  boolean removeSet (String key) throws InterruptedException, ExecutionException;
 
 	public String addElement (String key,String field, String element);
+	public String getElement(String key);//TODO 
+	
+	//WORD SEARCH
+	public Future<Boolean> elementContains(String key, String field, String word);
+	public Future<String> searchEntryContainingWord(String key, String field, String word);
 
+	//SOMAS
 	public void incr(String key, String field);
 	public void incrBy(String key, String field, int value);
 	public Future<Integer> sum (String key1, String field, String key2);
+	public Future<Integer> sumAll (String field);//TODO
 	public Future<Integer> multConst(String key, String field, int constant);
-
+	//MULTIPLICACOES
 	public Future<Integer> mult (String key1, String field, String key2);
-
-
-
+	public Future<Integer> multAll (String field);//TODO
+	//COMPARACOES
 	public Future<List<String>> searchElement (String field, String value);
 	public Future<List<String>> searchEntry (Map<String, String> set);
-
-	public Future<List<MyEntry>> orderEntrys (String field);//crescente ou acrescentar flag
-	public Future<List<MyEntry>>  searchGreaterThan (String field, int value);
-	public Future<List<MyEntry>>  searchLesserThan (String field, int value);
-
+	//ORDENACOES
+	public Future<List<String>> orderEntrys (String field);//crescente ou acrescentar flag
+	public Future<List<String>>  searchGreaterThan (String field, int value);
+	public Future<List<String>>  searchLesserThan (String field, int value);
 	public Future<Boolean> valuegreaterThan(String key1, String field, String key2);
 
 	public void Close();

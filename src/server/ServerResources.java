@@ -274,7 +274,7 @@ public class ServerResources {
 	@GET
 	@Path("/orderEntrys")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MyListEntry orderEntrys( @QueryParam("query")  String field) {
+	public MyList orderEntrys( @QueryParam("query")  String field) {
 		long begin = getTime();
 
 		try (Jedis jedis = jedisPool.getResource()) {
@@ -295,7 +295,10 @@ public class ServerResources {
 				s.add((new MyEntry(key,jedis.hgetAll(key))));
 			});
 
-			MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			List<String> l = new LinkedList<>();
+			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			MyList list = new MyList(l);
 			orderEntrysTime += getTime() - begin;
 			return list;
 		}
@@ -305,7 +308,7 @@ public class ServerResources {
 	@GET
 	@Path("/searchGreaterThan")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MyListEntry searchGreaterThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
+	public MyList searchGreaterThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			Set<String> set = jedis.smembers(":"+field+":");
@@ -317,7 +320,10 @@ public class ServerResources {
 					s.add((new MyEntry(key,map)));
 			});
 
-			MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			List<String> l = new LinkedList<>();
+			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			MyList list = new MyList(l);
 			searchGreaterTime+= getTime() - begin;
 			return list;
 		}
@@ -328,7 +334,7 @@ public class ServerResources {
 	@GET
 	@Path("/searchLesserThan")
 	@Produces(MediaType.APPLICATION_JSON)
-	public MyListEntry searchLesserThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
+	public MyList searchLesserThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
 		long begin = getTime();
 
 		try (Jedis jedis = jedisPool.getResource()) {
@@ -341,7 +347,10 @@ public class ServerResources {
 					s.add((new MyEntry(key,map)));
 			});
 
-			MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
+			List<String> l = new LinkedList<>();
+			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			MyList list = new MyList(l);
 			searchLesserTime+= getTime() - begin;
 			return list;
 		}

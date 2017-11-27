@@ -79,7 +79,7 @@ public class testTimes {
 	private static void searchLesserThanTest(clientAPI client) throws InterruptedException, ExecutionException {
 		long begin = getTime();
 		for (int n = 0; n <= TOTAL_OPERATIONS; n++) {
-			Future<List<MyEntry>> f = client.searchLesserThan("field4", 5);
+			Future<List<String>> f = client.searchLesserThan("field4", 5);
 			f.get();
 		}
 		long elapsed = getTime() - begin ;
@@ -93,7 +93,7 @@ public class testTimes {
 	private static void searchGreaterThanTest(clientAPI client) throws InterruptedException, ExecutionException {
 		long begin = getTime();
 		for (int n = 0; n <= TOTAL_OPERATIONS; n++) {
-			Future<List<MyEntry>> f = client.searchGreaterThan("field4", 5);
+			Future<List<String>> f = client.searchGreaterThan("field4", 5);
 			f.get();
 		}
 		long elapsed = getTime() - begin ;
@@ -105,7 +105,7 @@ public class testTimes {
 	private static void orderEntrysTest(clientAPI client) throws InterruptedException, ExecutionException {
 		long begin = getTime();
 		for (int n = 0; n <= TOTAL_OPERATIONS; n++) {
-			Future<List<MyEntry>> f = client.orderEntrys("field4");
+			Future<List<String>> f = client.orderEntrys("field4");
 			f.get();
 		}
 		long elapsed = getTime() - begin ;

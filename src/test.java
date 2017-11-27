@@ -192,19 +192,19 @@ public class test {
 		client.addSet("ola1007", map3);
 
 
-		Future<List<MyEntry>> list = client.orderEntrys("field5");
+		Future<List<String>> list = client.orderEntrys("field5");
 		List<String> keys = new LinkedList<>();
 		keys.add("ola1005");
 		keys.add("ola1006");
 		keys.add("ola1007");
 
-		List<MyEntry> l = list.get();
+		List<String> l = list.get();
 
 		Iterator<String> it = keys.iterator();
-		for (Iterator<MyEntry> iterator = l.iterator()  ; iterator.hasNext() && it.hasNext();) {
-			MyEntry myEntry = iterator.next();
+		for (Iterator<String> iterator = l.iterator()  ; iterator.hasNext() && it.hasNext();) {
+			String myEntry = iterator.next();
 			String string = it.next();
-			assert string.equals(myEntry.getKey());
+			assert string.equals(myEntry);
 		}
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
@@ -218,13 +218,13 @@ public class test {
 		client.addSet("ola1007", map3);
 
 
-		Future<List<MyEntry>> list = client.searchGreaterThan("field5", 11);
+		Future<List<String>> list = client.searchGreaterThan("field5", 11);
 
 
-		List<MyEntry> l = list.get();
-		for (Iterator<MyEntry> iterator = l.iterator()  ; iterator.hasNext();) {
-			MyEntry myEntry = iterator.next();
-			assert "ola1007".equals(myEntry.getKey());
+		List<String> l = list.get();
+		for (Iterator<String> iterator = l.iterator()  ; iterator.hasNext();) {
+			String myEntry = iterator.next();
+			assert "ola1007".equals(myEntry);
 		}
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
@@ -239,15 +239,15 @@ public class test {
 		client.addSet("ola1007", map3);
 
 
-		Future<List<MyEntry>> list = client.searchLesserThan("field5", 11);
+		Future<List<String>> list = client.searchLesserThan("field5", 11);
 
 
 
-		List<MyEntry> l = list.get();
+		List<String> l = list.get();
 
-		for (Iterator<MyEntry> iterator = l.iterator()  ; iterator.hasNext();) {
-			MyEntry myEntry = iterator.next();
-			assert "ola1005".equals(myEntry.getKey());
+		for (Iterator<String> iterator = l.iterator()  ; iterator.hasNext();) {
+			String myEntry = iterator.next();
+			assert "ola1005".equals(myEntry);
 		}
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
