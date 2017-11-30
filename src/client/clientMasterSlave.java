@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.JacksonFeature;
 
 import API.clientAPI;
 import utils.Element;
@@ -39,7 +40,7 @@ public class clientMasterSlave implements clientAPI{
 	
 
 	public clientMasterSlave(String targelUrl) {
-		ClientConfig config = new ClientConfig();
+		ClientConfig config = new ClientConfig().register(JacksonFeature.class);
 		client = ClientBuilder.newClient(config);
 		URI baseURI = UriBuilder.fromUri(targelUrl).build();
 		target = client.target(baseURI);
@@ -108,6 +109,55 @@ public class clientMasterSlave implements clientAPI{
 
 		return null;
 	}
+	
+	@Override
+	public Future<String> getElement(String key, String field) {
+		
+
+		
+		Future<String> response = target.queryParam("key", key).queryParam("field", field)
+				.path("server/getElem")
+				.request()
+				.async()
+				.get(String.class);
+
+		return response;
+	}
+	
+
+	
+	@Override
+	public Future<Boolean> elementContainsSentence(String key, String field, String sentence) {
+		Future<MyBoolean> contains = target.queryParam("key", key).queryParam("field", field).queryParam("sentence", sentence).path("server/elementContainsSentence/")
+				.request()
+				.accept(MediaType.APPLICATION_JSON)
+				.async()
+				.get(MyBoolean.class);
+
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		Future<Boolean> future = executor.submit(new Callable<Boolean>() {
+			public Boolean call() throws InterruptedException, ExecutionException {
+				return contains.get().isMyboolean();
+			}});
+		executor.shutdown();
+
+		return future;
+	}
+
+	@Override
+	public Future<List<String>> searchEntryContainingSentence(String field, String sentence) {
+		Future<MyList> list = target.queryParam("field", field).queryParam("sentence", sentence).path("server/searchEntryContainingSentence/")
+				.request()
+				.accept(MediaType.APPLICATION_JSON)
+				.async()
+				.get(MyList.class);
+
+		return FutureGetListString(list);
+	}
+
+
+
+
 
 	@Override
 	public void incr(String key,String field) {
@@ -135,6 +185,15 @@ public class clientMasterSlave implements clientAPI{
 				.get(Integer.class);
 		return response;
 	}
+	@Override
+	public Future<Integer> sumAll(String field) {
+		
+		Future<Integer> response = target.queryParam("field", field).path("server/sumAll/")
+				.request().async()
+				.get(Integer.class);
+		return response;
+	}
+
 
 	@Override
 	public Future<Integer> multConst(String key, String field, int constant) {
@@ -153,6 +212,15 @@ public class clientMasterSlave implements clientAPI{
 				.get(Integer.class);
 		return response;
 	}
+	
+	@Override
+	public Future<Integer> multAll(String field) {
+		Future<Integer> response = target.queryParam("field", field).path("server/multAll/")
+				.request().async()
+				.get(Integer.class);
+		return response;
+	}
+
 
 	@Override
 	public Future<List<String>> searchElement(String field, String value) {
@@ -408,35 +476,7 @@ public class clientMasterSlave implements clientAPI{
 	}
 
 
-	@Override
-	public Future<Boolean> elementContains(String key, String field, String word) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public Future<String> searchEntryContainingWord(String key, String field, String word) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<Integer> sumAll(String field) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Future<Integer> multAll(String field) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getElement(String key) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 }

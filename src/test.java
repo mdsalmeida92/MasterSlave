@@ -26,6 +26,7 @@ public class test {
 		map.put("field3", "2");
 		map.put("field4", "5");
 		map.put("field5", "10");
+		map.put("field6", "Saw yet kindness too replying whatever marianne.");
 
 		Map<String,String> map2 = new HashMap<String,String>();
 		map2.put("field1", "Hell");
@@ -33,6 +34,7 @@ public class test {
 		map2.put("field3", "3");
 		map2.put("field4", "6");
 		map2.put("field5", "11");
+		map2.put("field6", "Saw yet kindness 2 replying whatever marianne.");
 
 		Map<String,String> map3 = new HashMap<String,String>();
 		map3.put("field1", "bye");
@@ -40,15 +42,21 @@ public class test {
 		map3.put("field3", "4");
 		map3.put("field4", "7");
 		map3.put("field5", "12");
+		map3.put("field6", "Saw yet kindness TOO FAR replying whatever marianne.");
 
 
 		addGetTest(client, map);
 		addElementTest(client, map);
+		getElementTest(client, map);
 		removeTest(client, map);
+		elementContainsSentence(client, map);
+		searchEntryContainingSentence(client, map, map2, map3);
 		incrTest(client, map);
 		sumTest(client, map, map2);
+		sumAll(client, map, map2, map3);
 		sumConstTest(client, map);
 		multTest(client, map, map2);
+		multAll(client, map, map2, map3);
 		searchElemTest(client, map, map2);
 		searchEntriesTest(client, map, map2);
 		orderEntrysTest(client, map, map2, map3);
@@ -60,6 +68,93 @@ public class test {
 		client.Close();
 		System.err.println("acabou");
 
+
+	}
+
+	private static void multAll(clientAPI client, Map<String, String> map, Map<String, String> map2,
+			Map<String, String> map3) throws InterruptedException, ExecutionException{
+
+		client.addSet("ola1005", map);
+		client.addSet("ola1006", map2);
+		client.addSet("ola1007", map3);
+		Future<Integer> result = client.multAll("field4");
+		long mult = result.get();
+
+
+		assert mult == 210;
+
+
+
+
+		client.removeSet("ola1005");
+		client.removeSet("ola1006");
+		client.removeSet("ola1007");
+
+	}
+
+	private static void sumAll(clientAPI client, Map<String, String> map, Map<String, String> map2,
+			Map<String, String> map3)throws InterruptedException, ExecutionException {
+
+		client.addSet("ola1005", map);
+		client.addSet("ola1006", map2);
+		client.addSet("ola1007", map3);
+		Future<Integer> result = client.sumAll("field3");
+		long sum = result.get();
+
+
+		assert sum == 9;
+
+
+
+
+		client.removeSet("ola1005");
+		client.removeSet("ola1006");
+		client.removeSet("ola1007");
+
+	}
+
+	private static void searchEntryContainingSentence(clientAPI client, Map<String, String> map, Map<String, String> map2, Map<String, String> map3) throws InterruptedException, ExecutionException{
+
+		client.addSet("ola1005", map);
+		client.addSet("ola1006", map2);
+		client.addSet("ola1007", map3);
+		Future<List<String>> result = client.searchEntryContainingSentence("field6", "Saw yet kindness too");
+		List<String> list = result.get();
+
+		list.forEach((s) ->{
+			assert s.equals("ola1005");
+		} );
+
+
+
+		client.removeSet("ola1005");
+		client.removeSet("ola1006");
+		client.removeSet("ola1007");
+
+	}
+
+	private static void elementContainsSentence(clientAPI client, Map<String, String> map)throws InterruptedException, ExecutionException {
+		client.addSet("ola1005", map);
+		Future<Boolean> result = client.elementContainsSentence("ola1005", "field6", "Saw yet kindness too");
+		boolean elem = result.get();
+
+		assert elem;
+
+
+		client.removeSet("ola1005");
+
+	}
+
+	private static void getElementTest(clientAPI client, Map<String, String> map)throws InterruptedException, ExecutionException {
+
+		client.addSet("ola1005", map);
+		Future<String> result = client.getElement("ola1005", "field1");
+		String elem = result.get();
+
+		assert elem.equals("Hello");
+
+
+		client.removeSet("ola1005");
 
 	}
 

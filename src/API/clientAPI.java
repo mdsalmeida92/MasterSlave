@@ -16,11 +16,11 @@ public interface clientAPI {
 	public  boolean removeSet (String key) throws InterruptedException, ExecutionException;
 
 	public String addElement (String key,String field, String element);
-	public String getElement(String key);//TODO 
+	public Future<String> getElement(String key, String field);//TODO 
 	
 	//WORD SEARCH
-	public Future<Boolean> elementContains(String key, String field, String word);
-	public Future<String> searchEntryContainingWord(String key, String field, String word);
+	public Future<Boolean> elementContainsSentence(String key, String field, String word);//TODO 
+	public Future<List<String>> searchEntryContainingSentence(String field, String word);//TODO 
 
 	//SOMAS
 	public void incr(String key, String field);

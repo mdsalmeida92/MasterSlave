@@ -50,6 +50,9 @@ public class ServerResources {
 	public JedisPool jedisPool ;
 	private long putTime;
 	private long getTime;
+	private long getElemTime;
+	private long searchEntryContainingSentenceTime;
+	private long elementContainsSentenceTime;
 	private long removeTime;
 	private long updateTime;
 	private long incrTime;
@@ -62,6 +65,9 @@ public class ServerResources {
 	private long searchGreaterTime;
 	private long searchLesserTime;
 	private long valueGreaterTime;
+	private long sumAllTime;
+	private long multAllTime;
+	
 
 	public ServerResources(){
 		jedisPool = new JedisPool(new JedisPoolConfig(), "localhost", 6379);
@@ -70,7 +76,10 @@ public class ServerResources {
 		jedis.flushAll();
 		putTime = 0;
 		getTime= 0;
+		getElemTime = 0;
 		removeTime= 0;
+		searchEntryContainingSentenceTime =0;
+		elementContainsSentenceTime =0;
 		updateTime= 0;
 		incrTime= 0;
 		sumTime= 0;
@@ -82,6 +91,8 @@ public class ServerResources {
 		searchGreaterTime= 0;
 		searchLesserTime= 0;
 		valueGreaterTime= 0;
+		sumAllTime = 0;
+		multAllTime =0;
 
 		System.out.println(jedis.ping());
 	}
@@ -152,6 +163,67 @@ public class ServerResources {
 		updateTime += getTime() - begin;
 	}
 
+	@GET
+	@Path("/getElem")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String getElement(@QueryParam("key") String key, @QueryParam("field") String field) throws InterruptedException {
+
+			long begin = getTime();
+			try (Jedis jedis = jedisPool.getResource()) {
+				String elem = jedis.hget(key, field);
+				getElemTime += getTime() - begin;
+				return elem;
+			}
+
+
+	}
+
+
+	
+	@GET
+	@Path("/elementContainsSentence")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MyBoolean elementContainsSentence(@QueryParam("key") String key, 
+			@QueryParam("field") String field, 
+			@QueryParam("sentence") String sentence) throws InterruptedException {
+
+		long begin = getTime();
+		try (Jedis jedis = jedisPool.getResource()) {
+			String elem = jedis.hget(key, field);
+
+			MyBoolean contains = new MyBoolean(elem.contains(sentence));
+			elementContainsSentenceTime += getTime() - begin;
+			return contains;
+		}
+
+
+
+	}
+	
+	@GET
+	@Path("/searchEntryContainingSentence")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MyList searchEntryContainingWord(@QueryParam("field") String field, 
+			@QueryParam("sentence") String sentence) throws InterruptedException {
+
+		long begin = getTime();
+		try (Jedis jedis = jedisPool.getResource()) {
+			Set<String> set = jedis.smembers(":"+field+":");
+			List<String> l = new LinkedList<>();
+			set.forEach((key) -> {
+				if(jedis.hget(key, field).contains(sentence))
+					l.add(key);
+			});
+
+			MyList list = new MyList(l);
+			searchEntryContainingSentenceTime += getTime() - begin;
+			return list;
+		}
+
+
+
+	}
+
 	@PUT
 	@Path("/incr/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -181,6 +253,31 @@ public class ServerResources {
 				long value2 = Integer.valueOf(jedis.hget(key2, field));
 				sumTime += getTime() - begin;
 				return value1+value2;
+
+			}
+
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+		}
+		return 0;
+
+
+
+	}
+	@GET
+	@Path("/sumAll")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long sumAll(@QueryParam("field")  String field) {
+		long begin = getTime();
+		try {
+			try (Jedis jedis = jedisPool.getResource()) {
+				long result = 0;
+				Set<String> set = jedis.smembers(":"+field+":");
+		        for (String key : set){
+		        	 result += Long.valueOf(jedis.hget(key, field));
+		        }
+				sumAllTime += getTime() - begin;
+				return result;
 
 			}
 
@@ -223,6 +320,32 @@ public class ServerResources {
 			multTime += getTime() - begin;
 			return value1*value2;
 		}		
+
+
+
+	}
+	
+	@GET
+	@Path("/multAll")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long multAll(@QueryParam("field")  String field) {
+		long begin = getTime();
+		try {
+			try (Jedis jedis = jedisPool.getResource()) {
+				long result = 1;
+				Set<String> set = jedis.smembers(":"+field+":");
+		        for (String key : set){
+		        	 result *= Long.valueOf(jedis.hget(key, field));
+		        }
+		        multAllTime += getTime() - begin;
+				return result;
+
+			}
+
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+		}
+		return 0;
 
 
 
@@ -375,14 +498,14 @@ public class ServerResources {
 		}
 
 	}
-	
+
 	@GET
 	@Path("/getTime")
 	@Produces(MediaType.APPLICATION_JSON)
 	public long getTimes() {
 		return getTime;
 	}
-	
+
 	@GET
 	@Path("/putTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -391,7 +514,7 @@ public class ServerResources {
 	}
 
 
-	
+
 	@GET
 	@Path("/removeTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -399,7 +522,7 @@ public class ServerResources {
 		return removeTime;
 	}
 
-	
+
 	@GET
 	@Path("/updateTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -407,7 +530,7 @@ public class ServerResources {
 		return updateTime;
 	}
 
-	
+
 	@GET
 	@Path("/incrTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -415,7 +538,7 @@ public class ServerResources {
 		return incrTime;
 	}
 
-	
+
 	@GET
 	@Path("/sumTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -423,7 +546,7 @@ public class ServerResources {
 		return sumTime;
 	}
 
-	
+
 	@GET
 	@Path("/sumConstTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -431,7 +554,7 @@ public class ServerResources {
 		return sumConstTime;
 	}
 
-	
+
 	@GET
 	@Path("/multTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -439,7 +562,7 @@ public class ServerResources {
 		return multTime;
 	}
 
-	
+
 	@GET
 	@Path("/searchElemTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -447,7 +570,7 @@ public class ServerResources {
 		return searchElemTime;
 	}
 
-	
+
 	@GET
 	@Path("/searchEntrysTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -455,7 +578,7 @@ public class ServerResources {
 		return searchEntrysTime;
 	}
 
-	
+
 	@GET
 	@Path("/orderEntrysTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -463,7 +586,7 @@ public class ServerResources {
 		return orderEntrysTime;
 	}
 
-	
+
 	@GET
 	@Path("/searchGreaterTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -471,7 +594,7 @@ public class ServerResources {
 		return searchGreaterTime;
 	}
 
-	
+
 	@GET
 	@Path("/searchLesserTime")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -479,7 +602,7 @@ public class ServerResources {
 		return searchLesserTime;
 	}
 
-	
+
 	@GET
 	@Path("/valueGreaterTime")
 	@Produces(MediaType.APPLICATION_JSON)

@@ -6,6 +6,7 @@ import java.net.URI;
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -20,6 +21,7 @@ public class AppServer {
 		
 		ResourceConfig config = new ResourceConfig();
 		config.register( new ServerResources());
+		config.register( JacksonFeature.class);
 		
 
 		JdkHttpServerFactory.createHttpServer(baseUri, config);
