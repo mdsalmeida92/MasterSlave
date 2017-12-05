@@ -28,6 +28,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 
 import API.clientAPI;
 import utils.Element;
+import utils.InsecureHostnameVerifier;
 import utils.MyBoolean;
 import utils.MyEntry;
 import utils.MyList;
@@ -40,8 +41,9 @@ public class clientMasterSlave implements clientAPI{
 	
 
 	public clientMasterSlave(String targelUrl) {
-		ClientConfig config = new ClientConfig().register(JacksonFeature.class);
-		client = ClientBuilder.newClient(config);
+		//ClientConfig config = new ClientConfig().register(JacksonFeature.class);
+		//client = ClientBuilder.newClient(config);
+		client = ClientBuilder.newBuilder().hostnameVerifier(new InsecureHostnameVerifier()).build();
 		URI baseURI = UriBuilder.fromUri(targelUrl).build();
 		target = client.target(baseURI);
 

@@ -17,7 +17,7 @@ public class testAsync {
 		map.put("field2", "World");
 		map.put("field4", "1");
 		
-		clientMasterSlave ed = new clientMasterSlave("http://localhost:8080/");
+		clientMasterSlave ed = new clientMasterSlave("https://localhost:8443/");
 		ed.addSet("ola1005", map);
 		clientAPI[] c = new clientAPI[20];
 		List <Future<Map<String,String>>> f = new ArrayList<Future<Map<String,String>>>();

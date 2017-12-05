@@ -14,17 +14,17 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class AppServer {
 
 	public static void main(String[] args) throws Exception {
-		int port = 8080;
+		int port = 8443;
 
 
-		URI baseUri = UriBuilder.fromUri("http://0.0.0.0/").port(port).build();
+		URI baseUri = UriBuilder.fromUri("https://0.0.0.0/").port(port).build();
 		
 		ResourceConfig config = new ResourceConfig();
 		config.register( new ServerResources());
 		config.register( JacksonFeature.class);
 		
 
-		JdkHttpServerFactory.createHttpServer(baseUri, config);
+		JdkHttpServerFactory.createHttpServer(baseUri, config,SSLContext.getDefault());
 		System.err.println("Server ready @ " + baseUri + " : local IP = " + InetAddress.getLocalHost().getHostAddress());
 
 		

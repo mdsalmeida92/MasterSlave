@@ -19,7 +19,7 @@ public class test {
 
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
 
-		clientAPI client= new clientMasterSlave("http://localhost:8080/");
+		clientAPI client= new clientMasterSlave("https://localhost:8443/");
 		Map<String,String> map = new HashMap<String,String>();
 		map.put("field1", "Hello");
 		map.put("field2", "World");
