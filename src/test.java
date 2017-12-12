@@ -1,9 +1,11 @@
 import API.clientAPI;
 import client.clientMasterSlave;
+import utils.Cipher;
 import utils.MyBoolean;
 import utils.MyEntry;
 import utils.MyList;
 import utils.MyListEntry;
+import utils.SecurityType;
 
 import java.awt.event.ItemEvent;
 import java.util.HashMap;
@@ -15,11 +17,66 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 public class test {
 
-	public static void main(String[] args) throws InterruptedException, ExecutionException {
+	public static void main(String[] args) throws InterruptedException, ExecutionException, ParseException {
+		
+		String port = "8443";
+		String ip = "localhost";
+		
+		CommandLineParser parser = new DefaultParser();
 
-		clientAPI client= new clientMasterSlave("https://localhost:8443/");
+		Options options = new Options();
+		options.addOption("port", true, "server port");
+		options.addOption("ip", true, "ip adress");
+		options.addOption("N", false, "unencrypted data in kv store");
+		options.addOption("E", false, "encrypted data in kv store");
+		options.addOption("EE", false, "encrypted data with two layers in kv store");
+		CommandLine line = parser.parse( options, args );
+
+		if(line.hasOption("port")) {
+			port= line.getOptionValue("port");
+
+		}
+		if(line.hasOption("ip")) {
+			ip= line.getOptionValue("ip");
+		}
+		
+	
+
+
+
+		Map<String,Cipher> mapping = new HashMap<String,Cipher>();
+		mapping.put("field1", Cipher.DET);
+		mapping.put("field2", Cipher.DET);
+		mapping.put("field3", Cipher.ADD);
+		mapping.put("field4", Cipher.MULT);
+		mapping.put("field5", Cipher.OPE);
+		mapping.put("field6", Cipher.SEARCH);
+		
+		//NORMAL
+
+			clientAPI client= new clientMasterSlave("https://"+ip+":"+port+"/");
+
+		
+		//ENCRYPTED
+		if(line.hasOption("E")) {
+			client= new clientMasterSlave("https://"+ip+":"+port+"/",SecurityType.ENCRYPTED, "" ,mapping);
+		}
+		
+		
+		//ENHACED ENCRYPTED
+		if(line.hasOption("EE")) {
+			client= new clientMasterSlave("https://"+ip+":"+port+"/", SecurityType.ENHANCED_ENCRYPTED, "" ,mapping);
+		}
+		
+		
 		Map<String,String> map = new HashMap<String,String>();
 		map.put("field1", "Hello");
 		map.put("field2", "World");

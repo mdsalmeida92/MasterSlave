@@ -166,9 +166,8 @@ public class clientMasterSlave implements clientAPI{
 			long begin = getTime();
 			String EncKey = HomoDet.encrypt(DetKey, key);
 			PrivacygetTime += getTime() - begin;
-			String url = getUrl();
 
-			Future<MyEntry> entryEncrypted = target.path("server/"+url+EncKey)
+			Future<MyEntry> entryEncrypted = target.path("server/"+EncKey)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
@@ -213,7 +212,7 @@ public class clientMasterSlave implements clientAPI{
 
 			String url = getUrl();
 
-			target.path("server/" + url +EncKey)
+			target.path("server/" +EncKey)
 			.request()
 			.post( Entity.entity( EncEntry, MediaType.APPLICATION_JSON));
 			break;
@@ -242,7 +241,7 @@ public class clientMasterSlave implements clientAPI{
 			String EncKey = HomoDet.encrypt(DetKey, key);
 			PrivacyremoveTime += getTime() - begin;
 			String url = getUrl();
-			target.path("server/"+ url +EncKey)
+			target.path("server/" +EncKey)
 			.request()
 			.delete();
 			break;
@@ -268,7 +267,7 @@ public class clientMasterSlave implements clientAPI{
 			Element EncElem = encryptElement(field, element);
 			PrivacyupdateTime += getTime() - begin;
 			String url = getUrl();
-			Response response = target.path("server/"+url+EncKey)
+			Response response = target.path("server/"+EncKey)
 					.request()
 					.put(Entity.entity( EncElem, MediaType.APPLICATION_JSON));
 			response.getStatus();
@@ -299,7 +298,7 @@ public class clientMasterSlave implements clientAPI{
 			String Encfield = HomoDet.encrypt(DetKey, field);
 			String url = getUrl();
 			Future<String> response = target.queryParam("key", EncKey).queryParam("field", Encfield)
-					.path("server/getElem"+url)
+					.path("server/getElem")
 					.request()
 					.async()
 					.get(String.class);
@@ -308,7 +307,7 @@ public class clientMasterSlave implements clientAPI{
 			future = executor.submit(new Callable<String>() {
 				public String call() throws InterruptedException, ExecutionException {
 					String cipherKey = response.get();
-					String DecKey = HomoDet.decrypt(DetKey, cipherKey);
+					String DecKey = decryptValue(field,cipherKey );
 					return DecKey;
 				}});
 			executor.shutdown();
@@ -323,6 +322,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<Boolean> elementContainsSentence(String key, String field, String sentence) {
+		String url = getUrl();
 		Future<Boolean> future = null;
 		String EncKey = null;
 		String Encfield = null;
@@ -350,7 +350,7 @@ public class clientMasterSlave implements clientAPI{
 			Encfield = HomoDet.encrypt(DetKey, field);
 			Encsentence = HomoSearch.encrypt(SearchKey, sentence);
 
-			Future<MyBoolean> Enccontains = target.queryParam("key", EncKey).queryParam("field", Encfield).queryParam("sentence", Encsentence).path("server/elementContainsSentence/")
+			Future<MyBoolean> Enccontains = target.queryParam("key", EncKey).queryParam("field", Encfield).queryParam("sentence", Encsentence).path("server/elementContainsSentence/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
@@ -370,7 +370,7 @@ public class clientMasterSlave implements clientAPI{
 			String iv = Base64.encodeBase64String(IV);
 
 
-			Future<MyBoolean> EnEnccontains = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("key", EncKey).queryParam("field", Encfield).queryParam("sentence", Encsentence).path("server/elementContainsSentence/")
+			Future<MyBoolean> EnEnccontains = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("key", EncKey).queryParam("field", Encfield).queryParam("sentence", Encsentence).path("server/elementContainsSentence/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
@@ -391,6 +391,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<List<String>> searchEntryContainingSentence(String field, String sentence) {
+		String url = getUrl();
 		Future<List<String>> future = null;
 		String Encfield = null;
 		String Encsentence = null;
@@ -411,7 +412,7 @@ public class clientMasterSlave implements clientAPI{
 			Encfield = HomoDet.encrypt(DetKey, field);
 			Encsentence = HomoSearch.encrypt(SearchKey, sentence);
 
-			Future<MyList> Enclist = target.queryParam("field", Encfield).queryParam("sentence", Encsentence).path("server/searchEntryContainingSentence/")
+			Future<MyList> Enclist = target.queryParam("field", Encfield).queryParam("sentence", Encsentence).path("server/searchEntryContainingSentence/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
@@ -440,7 +441,7 @@ public class clientMasterSlave implements clientAPI{
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
 
-			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("field", Encfield).queryParam("sentence", Encsentence).path("server/searchEntryContainingSentence/")
+			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("field", Encfield).queryParam("sentence", Encsentence).path("server/searchEntryContainingSentence/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
@@ -482,6 +483,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public void incrBy(String key,String field, int value) {
+		String url = getUrl();
 		String val = Integer.toString(value);
 		long begin=0;
 		String EncKey = null;
@@ -504,7 +506,7 @@ public class clientMasterSlave implements clientAPI{
 			elem = encryptElement(field, val);
 			elem.setKey(SumKey.getNsquare().toString());
 			PrivacyincrTime += getTime() - begin;
-			target.path("server/incr/"+EncKey)
+			target.path("server/incr/"+url+EncKey)
 			.request()
 			.put(Entity.entity( elem, MediaType.APPLICATION_JSON));
 
@@ -519,7 +521,7 @@ public class clientMasterSlave implements clientAPI{
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
 			PrivacyincrTime += getTime() - begin;
-			target.queryParam("iv", iv).queryParam("RandomKey", RandKey).path("server/incr/"+EncKey)
+			target.queryParam("iv", iv).queryParam("RandomKey", RandKey).path("server/incr/"+url+EncKey)
 			.request()
 			.put(Entity.entity( elem, MediaType.APPLICATION_JSON));
 
@@ -531,6 +533,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<Integer> sum(String key1, String field, String key2) {
+		String url = getUrl();
 
 		Future<Integer> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -553,7 +556,7 @@ public class clientMasterSlave implements clientAPI{
 			Encfield = HomoDet.encrypt(DetKey, field);
 			PrivacysumTime += getTime() - begin;
 
-			Future<String> Encresponse = target.queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/sum/")
+			Future<String> Encresponse = target.queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/sum/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -561,9 +564,7 @@ public class clientMasterSlave implements clientAPI{
 				public Integer call() throws InterruptedException, ExecutionException {
 					String resp= Encresponse.get();
 					long begin = getTime();
-					System.err.println(resp);
 					String l = decryptValue(field,resp );
-					System.err.println(l);
 					Integer result = Integer.valueOf(l);
 					PrivacysumTime += getTime() - begin;
 					return result;
@@ -583,7 +584,7 @@ public class clientMasterSlave implements clientAPI{
 			String iv = Base64.encodeBase64String(IV);
 			PrivacysumTime += getTime() - begin;
 
-			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/sum/")
+			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/sum/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -606,6 +607,7 @@ public class clientMasterSlave implements clientAPI{
 	}
 	@Override
 	public Future<Integer> sumAll(String field) {
+		String url = getUrl();
 		Future<Integer> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		String Encfield = null;
@@ -622,7 +624,7 @@ public class clientMasterSlave implements clientAPI{
 
 			Encfield = HomoDet.encrypt(DetKey, field);
 
-			Future<String> Encresponse = target.queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("field", Encfield).path("server/sumAll/")
+			Future<String> Encresponse = target.queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("field", Encfield).path("server/sumAll/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -630,7 +632,6 @@ public class clientMasterSlave implements clientAPI{
 			future = executor.submit(new Callable<Integer>() {
 				public Integer call() throws InterruptedException, ExecutionException {
 					String resp= Encresponse.get();
-					System.out.println(resp);
 					long begin = getTime();
 					Integer result = Integer.valueOf(decryptValue(field,resp ));
 
@@ -646,7 +647,7 @@ public class clientMasterSlave implements clientAPI{
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
 
-			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("field", Encfield).path("server/sumAll/")
+			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("field", Encfield).path("server/sumAll/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -654,7 +655,6 @@ public class clientMasterSlave implements clientAPI{
 			future = executor.submit(new Callable<Integer>() {
 				public Integer call() throws InterruptedException, ExecutionException {
 					String resp= EnEncresponse.get();
-					System.out.println(resp);
 					long begin = getTime();
 					Integer result = Integer.valueOf(decryptValue(field,resp ));
 
@@ -674,6 +674,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<Integer> multConst(String key, String field, int constant) {
+		String url = getUrl();
 
 		Future<Integer> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -693,7 +694,7 @@ public class clientMasterSlave implements clientAPI{
 			EncKey = HomoDet.encrypt(DetKey, key);
 			Encfield = HomoDet.encrypt(DetKey, field);
 			PrivacysumConstTime += getTime() - begin;
-			Future<String> Encresponse = target.queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key", EncKey).queryParam("const", constant).queryParam("field", Encfield).path("server/multConst/")
+			Future<String> Encresponse = target.queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key", EncKey).queryParam("const", constant).queryParam("field", Encfield).path("server/multConst/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -716,7 +717,7 @@ public class clientMasterSlave implements clientAPI{
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
 			PrivacysumConstTime += getTime() - begin;
-			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key", EncKey).queryParam("const", constant).queryParam("field", Encfield).path("server/multConst/")
+			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key", EncKey).queryParam("const", constant).queryParam("field", Encfield).path("server/multConst/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -742,6 +743,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<Integer> mult(String key1, String field, String key2) {
+		String url = getUrl();
 		Future<Integer> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		String EncKey1 = null;
@@ -765,7 +767,7 @@ public class clientMasterSlave implements clientAPI{
 			publicRSAKey = HelpSerial.toString(publicKey);
 			PrivacymultTime += getTime() - begin;
 
-			Future<String> Encresponse = target.queryParam("publicKey", publicRSAKey).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/mult/")
+			Future<String> Encresponse = target.queryParam("publicKey", publicRSAKey).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/mult/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -791,7 +793,7 @@ public class clientMasterSlave implements clientAPI{
 			publicRSAKey = HelpSerial.toString(publicKey);
 			PrivacymultTime += getTime() - begin;
 
-			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("publicKey", publicRSAKey).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/mult/")
+			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("publicKey", publicRSAKey).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/mult/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -814,6 +816,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<Integer> multAll(String field) {
+		String url = getUrl();
 		Future<Integer> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		String Encfield = null;
@@ -829,7 +832,7 @@ public class clientMasterSlave implements clientAPI{
 		case ENCRYPTED:
 			Encfield = HomoDet.encrypt(DetKey, field);
 			publicRSAKey = HelpSerial.toString(publicKey);
-			Future<String> Encresponse = target.queryParam("publicKey", publicRSAKey).queryParam("field", Encfield).path("server/multAll/")
+			Future<String> Encresponse = target.queryParam("publicKey", publicRSAKey).queryParam("field", Encfield).path("server/multAll/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -848,7 +851,7 @@ public class clientMasterSlave implements clientAPI{
 			publicRSAKey = HelpSerial.toString(publicKey);
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
-			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("publicKey", publicRSAKey).queryParam("field", Encfield).path("server/multAll/")
+			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("publicKey", publicRSAKey).queryParam("field", Encfield).path("server/multAll/"+url)
 					.request().async()
 					.get(String.class);
 
@@ -872,6 +875,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<List<String>> searchElement(String field, String value) {
+		String url = getUrl();
 		Future<List<String>> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		String Encfield = null;
@@ -894,7 +898,7 @@ public class clientMasterSlave implements clientAPI{
 			Encvalue = HomoDet.encrypt(DetKey, value);
 			PrivacysearchElemTime += getTime() - begin;
 
-			Future<MyList> Enclist = target.queryParam("field", Encfield).queryParam("value", Encvalue).path("server/searchElement/")
+			Future<MyList> Enclist = target.queryParam("field", Encfield).queryParam("value", Encvalue).path("server/searchElement/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)				
 					.async()
@@ -921,7 +925,7 @@ public class clientMasterSlave implements clientAPI{
 			String iv = Base64.encodeBase64String(IV);
 			PrivacysearchElemTime += getTime() - begin;
 
-			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("field", Encfield).queryParam("value", Encvalue).path("server/searchElement/")
+			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("field", Encfield).queryParam("value", Encvalue).path("server/searchElement/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)				
 					.async()
@@ -950,6 +954,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<List<String>> searchEntry(Map<String, String> set) {
+		String url = getUrl();
 
 
 		Future<List<String>> future = null;
@@ -979,7 +984,7 @@ public class clientMasterSlave implements clientAPI{
 			List<String> Encl = new LinkedList<String>();
 			set.forEach((k, v) -> Encl.add(HomoDet.encrypt(DetKey, k)+":"+HomoDet.encrypt(DetKey, v)));
 			PrivacysearchEntrysTime += getTime() - begin;
-			Future<MyList> Enclist = target.queryParam("query", Encl.toArray()).path("server/searchEntrys/")
+			Future<MyList> Enclist = target.queryParam("query", Encl.toArray()).path("server/searchEntrys/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
@@ -1004,7 +1009,7 @@ public class clientMasterSlave implements clientAPI{
 			String iv = Base64.encodeBase64String(IV);
 			set.forEach((k, v) -> l.add(":"+HomoDet.encrypt(DetKey, k)+":/"+HomoDet.encrypt(DetKey, v)));
 			PrivacysearchEntrysTime += getTime() - begin;
-			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("query", l.toArray()).path("server/searchEntrys/")
+			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("query", l.toArray()).path("server/searchEntrys/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
@@ -1033,6 +1038,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<List<String>> orderEntrys(String field) {
+		String url = getUrl();
 
 
 		Future<List<String>> future = null;
@@ -1052,16 +1058,16 @@ public class clientMasterSlave implements clientAPI{
 
 			break;
 		case ENCRYPTED:
-			 begin = getTime();
-			 Encfield = HomoDet.encrypt(DetKey, field);
+			begin = getTime();
+			Encfield = HomoDet.encrypt(DetKey, field);
 			PrivacyorderEntrysTime += getTime() - begin;
-			Future<MyList> Enclist = target.queryParam("query", Encfield).path("server/orderEntrys/")
+			Future<MyList> Enclist = target.queryParam("query", Encfield).path("server/orderEntrys/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
 					.get(MyList.class);
 
-			 future = executor.submit(new Callable<List<String>>() {
+			future = executor.submit(new Callable<List<String>>() {
 				public List<String> call() throws InterruptedException, ExecutionException {
 					List<String> l = Enclist.get().getList();
 					List<String> c = new LinkedList<String>();
@@ -1076,18 +1082,18 @@ public class clientMasterSlave implements clientAPI{
 				}});
 			break;
 		case ENHANCED_ENCRYPTED:
-			 begin = getTime();
+			begin = getTime();
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
-			 Encfield = HomoDet.encrypt(DetKey, field);
+			Encfield = HomoDet.encrypt(DetKey, field);
 			PrivacyorderEntrysTime += getTime() - begin;
-			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("query", Encfield).path("server/orderEntrys/")
+			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("query", Encfield).path("server/orderEntrys/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
 					.get(MyList.class);
 
-			 future = executor.submit(new Callable<List<String>>() {
+			future = executor.submit(new Callable<List<String>>() {
 				public List<String> call() throws InterruptedException, ExecutionException {
 					List<String> l = EnEnclist.get().getList();
 					List<String> c = new LinkedList<String>();
@@ -1095,7 +1101,7 @@ public class clientMasterSlave implements clientAPI{
 					l.forEach((s) -> { 
 						String DecryptedKey = HomoDet.decrypt(DetKey, s);
 						c.add(DecryptedKey);
-						
+
 						;});
 					PrivacyorderEntrysTime += getTime() - begin;
 					return c;
@@ -1112,6 +1118,7 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<List<String>> searchGreaterThan(String field, int value) {
+		String url = getUrl();
 
 		Future<List<String>> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -1120,23 +1127,23 @@ public class clientMasterSlave implements clientAPI{
 		long begin=0;
 		switch (securityType) {
 		case NORMAL:
-			
+
 			Future<MyList> list = target.queryParam("field", field).queryParam("value", value).path("server/searchGreaterThan/")
 			.request()
 			.accept(MediaType.APPLICATION_JSON)
 			.async()
 			.get(MyList.class);
 
-	future =  FutureGetListString(list);
+			future =  FutureGetListString(list);
 
 			break;
 		case ENCRYPTED:
-			
-			 begin = getTime();
-			 Encfield = HomoDet.encrypt(DetKey, field);
-			 encValue = opeObject.encrypt(value);
+
+			begin = getTime();
+			Encfield = HomoDet.encrypt(DetKey, field);
+			encValue = opeObject.encrypt(value);
 			PrivacysearchGreaterTime += getTime() - begin;
-			Future<MyList> Enclist = target.queryParam("field", Encfield).queryParam("value", encValue).path("server/searchGreaterThan/")
+			Future<MyList> Enclist = target.queryParam("field", Encfield).queryParam("value", encValue).path("server/searchGreaterThan/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
@@ -1158,20 +1165,20 @@ public class clientMasterSlave implements clientAPI{
 
 			break;
 		case ENHANCED_ENCRYPTED:
-			
-			 begin = getTime();
+
+			begin = getTime();
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
-			 Encfield = HomoDet.encrypt(DetKey, field);
-			 encValue = opeObject.encrypt(value);
+			Encfield = HomoDet.encrypt(DetKey, field);
+			encValue = opeObject.encrypt(value);
 			PrivacysearchGreaterTime += getTime() - begin;
-			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("field", Encfield).queryParam("value", encValue).path("server/searchGreaterThan/")
+			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("field", Encfield).queryParam("value", encValue).path("server/searchGreaterThan/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
 					.get(MyList.class);
-			
-			 future = executor.submit(new Callable<List<String>>() {
+
+			future = executor.submit(new Callable<List<String>>() {
 				public List<String> call() throws InterruptedException, ExecutionException {
 					List<String> l = EnEnclist.get().getList();
 					List<String> c = new LinkedList<String>();
@@ -1179,7 +1186,7 @@ public class clientMasterSlave implements clientAPI{
 					l.forEach((s) -> { 
 						String DecryptedKey = HomoDet.decrypt(DetKey, s);
 						c.add(DecryptedKey);
-						
+
 						;});
 					PrivacysearchGreaterTime += getTime() - begin;
 					return c;
@@ -1196,33 +1203,34 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<List<String>> searchLesserThan(String field, int value) {
+		String url = getUrl();
 
 		Future<List<String>> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		String Encfield = null;
 		long encValue = 0;
 		long begin=0;
-		
+
 		switch (securityType) {
 		case NORMAL:
-			
+
 			Future<MyList> list = target.queryParam("field", field).queryParam("value", value).path("server/searchLesserThan/")
 			.request()
 			.accept(MediaType.APPLICATION_JSON)
 			.async()
 			.get(MyList.class);
 
-	return FutureGetListString(list);
+			future = FutureGetListString(list);
 
 			break;
 		case ENCRYPTED:
-			
-			 begin = getTime();
-			 Encfield = HomoDet.encrypt(DetKey, field);
-			 encValue = opeObject.encrypt(value);
+
+			begin = getTime();
+			Encfield = HomoDet.encrypt(DetKey, field);
+			encValue = opeObject.encrypt(value);
 			PrivacysearchLesserTime += getTime() - begin;
 
-			Future<MyList> Enclist = target.queryParam("field", Encfield).queryParam("value", encValue).path("server/searchLesserThan/")
+			Future<MyList> Enclist = target.queryParam("field", Encfield).queryParam("value", encValue).path("server/searchLesserThan/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
@@ -1244,21 +1252,21 @@ public class clientMasterSlave implements clientAPI{
 
 			break;
 		case ENHANCED_ENCRYPTED:
-			
-			 begin = getTime();
+
+			begin = getTime();
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
-			 Encfield = HomoDet.encrypt(DetKey, field);
-			 encValue = opeObject.encrypt(value);
+			Encfield = HomoDet.encrypt(DetKey, field);
+			encValue = opeObject.encrypt(value);
 			PrivacysearchLesserTime += getTime() - begin;
-			
-			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("field", Encfield).queryParam("value", encValue).path("server/searchLesserThan/")
+
+			Future<MyList> EnEnclist = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("field", Encfield).queryParam("value", encValue).path("server/searchLesserThan/"+url)
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
 					.get(MyList.class);
 
-			 future = executor.submit(new Callable<List<String>>() {
+			future = executor.submit(new Callable<List<String>>() {
 				public List<String> call() throws InterruptedException, ExecutionException {
 					List<String> l = EnEnclist.get().getList();
 					List<String> c = new LinkedList<String>();
@@ -1266,7 +1274,7 @@ public class clientMasterSlave implements clientAPI{
 					l.forEach((s) -> { 
 						String DecryptedKey = HomoDet.decrypt(DetKey, s);
 						c.add(DecryptedKey);
-						
+
 						;});
 					PrivacysearchLesserTime += getTime() - begin;
 					return c;
@@ -1284,33 +1292,72 @@ public class clientMasterSlave implements clientAPI{
 
 	@Override
 	public Future<Boolean> valuegreaterThan(String key1, String field, String key2) {
-
+		String url = getUrl();
+		Future<Boolean> future = null;
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		String Encfield = null;
+		String EncKey1 = null;
+		String EncKey2 = null;
+		long begin=0;
 		switch (securityType) {
 		case NORMAL:
+			Future<MyBoolean> isGreater = target.queryParam("key1", key1).queryParam("field", field).queryParam("key2", key2).path("server/valuegreaterThan/")
+			.request()
+			.accept(MediaType.APPLICATION_JSON)
+			.async()
+			.get(MyBoolean.class);
 
+	 future = executor.submit(new Callable<Boolean>() {
+		public Boolean call() throws InterruptedException, ExecutionException {
+			return isGreater.get().isMyboolean();
+		}});
 			break;
 		case ENCRYPTED:
+			
+			 begin = getTime();
+			 EncKey1 = HomoDet.encrypt(DetKey, key1);
+			 EncKey2 = HomoDet.encrypt(DetKey, key2);
+			 Encfield = HomoDet.encrypt(DetKey, field);
+			PrivacyvalueGreaterTime += getTime() - begin;
+
+			Future<MyBoolean> EncisGreater = target.queryParam("key1", EncKey1).queryParam("field", Encfield).queryParam("key2", EncKey2).path("server/valuegreaterThan/"+url)
+					.request()
+					.accept(MediaType.APPLICATION_JSON)
+					.async()
+					.get(MyBoolean.class);
+
+			future = executor.submit(new Callable<Boolean>() {
+				public Boolean call() throws InterruptedException, ExecutionException {
+					return EncisGreater.get().isMyboolean();
+				}});
 
 			break;
 		case ENHANCED_ENCRYPTED:
+			
+			 begin = getTime();
+			String RandKey = HelpSerial.toString(RandomKey);
+			String iv = Base64.encodeBase64String(IV);
+			 EncKey1 = HomoDet.encrypt(DetKey, key1);
+			 EncKey2 = HomoDet.encrypt(DetKey, key2);
+			 Encfield = HomoDet.encrypt(DetKey, field);
+			PrivacyvalueGreaterTime += getTime() - begin;
+			
+			Future<MyBoolean> EnEncisGreater = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("key1", EncKey1).queryParam("field", Encfield).queryParam("key2", EncKey2).path("server/valuegreaterThan/"+url)
+					.request()
+					.accept(MediaType.APPLICATION_JSON)
+					.async()
+					.get(MyBoolean.class);
+
+			future = executor.submit(new Callable<Boolean>() {
+				public Boolean call() throws InterruptedException, ExecutionException {
+					return EnEncisGreater.get().isMyboolean();
+				}});
 
 			break;
 
-		default:
-			break;
 		}
 
-		Future<MyBoolean> isGreater = target.queryParam("key1", key1).queryParam("field", field).queryParam("key2", key2).path("server/valuegreaterThan/")
-				.request()
-				.accept(MediaType.APPLICATION_JSON)
-				.async()
-				.get(MyBoolean.class);
 
-		ExecutorService executor = Executors.newFixedThreadPool(1);
-		Future<Boolean> future = executor.submit(new Callable<Boolean>() {
-			public Boolean call() throws InterruptedException, ExecutionException {
-				return isGreater.get().isMyboolean();
-			}});
 		executor.shutdown();
 
 		return future;
