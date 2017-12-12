@@ -15,17 +15,25 @@ public class Element {
 	public void setElement(String element) {
 		this.element = element;
 	}
+	
+	public String getKey() {
+		return key;
+	}
+	public void setKey(String key) {
+		this.key = key;
+	}
 	private String field;
 	private String element;
+
+	private String key;
 	
 	public Element(String field, String element) {
 		super();
 		this.field = field;
 		this.element = element;
 	}
-	
+
 	public Element() {
 	}
 	
-
 }
