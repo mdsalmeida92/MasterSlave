@@ -8,6 +8,7 @@ import utils.MyListEntry;
 import utils.SecurityType;
 
 import java.awt.event.ItemEvent;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -134,11 +135,11 @@ public class test {
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
 		client.addSet("ola1007", map3);
-		Future<Integer> result = client.multAll("field4");
-		long mult = result.get();
+		Future<BigInteger> result = client.multAll("field4");
+		BigInteger mult = result.get();
 
 
-		assert mult == 210;
+		assert mult.equals(new BigInteger("210"));
 
 
 
@@ -155,8 +156,8 @@ public class test {
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
 		client.addSet("ola1007", map3);
-		Future<Integer> result = client.sumAll("field3");
-		long sum = result.get();
+		Future<BigInteger> result = client.sumAll("field3");
+		long sum = result.get().longValue();
 
 
 		assert sum == 9;
@@ -270,9 +271,9 @@ public class test {
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
-		Future<Integer> value = client.sum("ola1005", "field3", "ola1006");
+		Future<BigInteger> value = client.sum("ola1005", "field3", "ola1006");
 
-		long v = value.get();
+		long v = value.get().longValue();;
 		assert v == 5;
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
@@ -284,9 +285,9 @@ public class test {
 	static void sumConstTest(clientAPI client, Map<String,String> map) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
-		Future<Integer> value = client.multConst("ola1005", "field3", 6);
+		Future<BigInteger> value = client.multConst("ola1005", "field3", 6);
 
-		assert value.get() == 12;
+		assert value.get().longValue() == 12;
 		client.removeSet("ola1005");
 
 
@@ -297,9 +298,9 @@ public class test {
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
-		Future<Integer> value = client.mult("ola1005", "field4", "ola1006");
+		Future<BigInteger> value = client.mult("ola1005", "field4", "ola1006");
 
-		assert value.get() == 30;
+		assert value.get().longValue() == 30;
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");
 

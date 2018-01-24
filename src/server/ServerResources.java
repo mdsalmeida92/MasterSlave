@@ -78,8 +78,8 @@ public class ServerResources {
 	private long multAllTime;
 	
 
-	public ServerResources(){
-		jedisPool = new JedisPool(new JedisPoolConfig(), "localhost", 6379);
+	public ServerResources(int port){
+		jedisPool = new JedisPool(new JedisPoolConfig(), "localhost", port);
 		Jedis jedis= jedisPool.getResource();
 		jedis.connect();
 		jedis.flushAll();
@@ -105,7 +105,34 @@ public class ServerResources {
 
 		System.out.println(jedis.ping());
 	}
+	
+	
+	@PUT
+	@Path("/resetTimes")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void updateEntry(int element) {
+		
+		putTime = 0;
+		getTime= 0;
+		getElemTime = 0;
+		removeTime= 0;
+		searchEntryContainingSentenceTime =0;
+		elementContainsSentenceTime =0;
+		updateTime= 0;
+		incrTime= 0;
+		sumTime= 0;
+		sumConstTime= 0;
+		multTime= 0;
+		searchElemTime= 0;
+		searchEntrysTime= 0;
+		orderEntrysTime= 0;
+		searchGreaterTime= 0;
+		searchLesserTime= 0;
+		valueGreaterTime= 0;
+		sumAllTime = 0;
+		multAllTime =0;
 
+	}
 
 	@GET
 	@Path("/{key}")
@@ -392,7 +419,7 @@ public class ServerResources {
 	@GET
 	@Path("/sum")
 	@Produces(MediaType.APPLICATION_JSON)
-	public long sum(@QueryParam("key1") String key1, 
+	public BigInteger sum(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
 		long begin = getTime();
@@ -401,14 +428,14 @@ public class ServerResources {
 				long value1 = Integer.valueOf(jedis.hget(key1, field));
 				long value2 = Integer.valueOf(jedis.hget(key2, field));
 				sumTime += getTime() - begin;
-				return value1+value2;
+				return new BigInteger(Long.toString((value1+value2)));
 
 			}
 
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 		}
-		return 0;
+		return new BigInteger("0");
 
 
 
@@ -477,7 +504,7 @@ public class ServerResources {
 	@GET
 	@Path("/sumAll")
 	@Produces(MediaType.APPLICATION_JSON)
-	public long sumAll(@QueryParam("field")  String field) {
+	public BigInteger sumAll(@QueryParam("field")  String field) {
 		long begin = getTime();
 		try {
 			try (Jedis jedis = jedisPool.getResource()) {
@@ -487,14 +514,14 @@ public class ServerResources {
 		        	 result += Long.valueOf(jedis.hget(key, field));
 		        }
 				sumAllTime += getTime() - begin;
-				return result;
+				return new BigInteger(Long.toString(result));
 
 			}
 
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 		}
-		return 0;
+		return new BigInteger("0");
 
 
 
@@ -580,14 +607,15 @@ public class ServerResources {
 	@GET
 	@Path("/multConst")
 	@Produces(MediaType.APPLICATION_JSON)
-	public long sumConst(@QueryParam("key") String key, 
+	public BigInteger sumConst(@QueryParam("key") String key, 
 			@QueryParam("field")  String field, 
 			@QueryParam("const") int constant) {
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			long value = Integer.valueOf(jedis.hget(key, field));
 			sumConstTime += getTime() - begin;
-			return value*constant;
+			return new BigInteger(Long.toString((value*constant)));
+
 
 		}
 
@@ -825,8 +853,6 @@ public class ServerResources {
 			searchElemTime += getTime() - begin;
 			return list;
 		}
-
-
 	}
 	
 	@GET
@@ -1403,6 +1429,42 @@ public class ServerResources {
 	public long valueGreaterTime() {
 		return valueGreaterTime;
 	}
+
+	@GET
+	@Path("/getElemTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long getElemTime() {
+		return getElemTime;
+	}
+
+	@GET
+	@Path("/elementContainsSentenceTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long elementContainsSentenceTime() {
+		return elementContainsSentenceTime;
+	}
+
+	@GET
+	@Path("/searchEntryContainingSentenceTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long searchEntryContainingSentenceTime() {
+		return searchEntryContainingSentenceTime;
+	}
+
+	@GET
+	@Path("/sumAllTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long sumAllTime() {
+		return sumAllTime;
+	}
+	
+	@GET
+	@Path("/multAllTime")
+	@Produces(MediaType.APPLICATION_JSON)
+	public long multAllTime() {
+		return multAllTime;
+	}
+
 
 	
 	private String RemoveEncryptLayer( String RandomKey, String iv, String elem) {

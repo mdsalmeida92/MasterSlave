@@ -1,13 +1,9 @@
 package API;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
-import utils.MyBoolean;
-import utils.MyEntry;
-import utils.MyList;
-import utils.MyListEntry;
 
 public interface clientAPI {
 
@@ -16,21 +12,21 @@ public interface clientAPI {
 	public  boolean removeSet (String key) throws InterruptedException, ExecutionException;
 
 	public String addElement (String key,String field, String element);
-	public Future<String> getElement(String key, String field);//TODO 
+	public Future<String> getElement(String key, String field);
 	
 	//WORD SEARCH
-	public Future<Boolean> elementContainsSentence(String key, String field, String word);//TODO 
-	public Future<List<String>> searchEntryContainingSentence(String field, String word);//TODO 
+	public Future<Boolean> elementContainsSentence(String key, String field, String word);
+	public Future<List<String>> searchEntryContainingSentence(String field, String word);
 
 	//SOMAS
 	public void incr(String key, String field);
 	public void incrBy(String key, String field, int value);
-	public Future<Integer> sum (String key1, String field, String key2);
-	public Future<Integer> sumAll (String field);//TODO
-	public Future<Integer> multConst(String key, String field, int constant);
+	public Future<BigInteger> sum (String key1, String field, String key2);
+	public Future<BigInteger> sumAll (String field);//TODO
+	public Future<BigInteger> multConst(String key, String field, int constant);
 	//MULTIPLICACOES
-	public Future<Integer> mult (String key1, String field, String key2);
-	public Future<Integer> multAll (String field);//TODO
+	public Future<BigInteger> mult (String key1, String field, String key2);
+	public Future<BigInteger> multAll (String field);//TODO
 	//COMPARACOES
 	public Future<List<String>> searchElement (String field, String value);
 	public Future<List<String>> searchEntry (Map<String, String> set);
@@ -55,8 +51,34 @@ public interface clientAPI {
 	public long getServersearchGreaterTime();
 	public long getServersearchLesserTime();
 	public long getServervalueGreaterTime();
+	public void resetServerTimes();
+	public long getServergetElementTime();
+	public long getServerElementContainsSenteceTime();
+	public long getServersearchEntryContainingSentenceTime();
+	public long getServersumAllTime();
+	public long getServermultAllTime();
 	
 	
+	public long getPrivacygetTime();
+	public long getPrivacyputTime();
+	public long getPrivacyupdateTime();
+	public long getPrivacymultAllTime();
+	public long getPrivacysumAllTime();
+	public long getPrivacysearchEntryContainingSentenceTime();
+	public long getPrivacyElementContainsSenteceTime();
+	public long getPrivacyGetElementTime();
+	public long getPrivacyvalueGreaterTime();
+	public long getPrivacysearchLesserTime();
+	public long getPrivacysearchGreaterTime();
+	public long getPrivacyorderEntrysTime();
+	public long getPrivacysearchEntrysTime();
+	public long getPrivacysearchElemTime();
+	public long getPrivacymultTime();
+	public long getPrivacysumConstTime();
+	public long getPrivacysumTime();
+	public long getPrivacyincrTime();
+	public long getPrivacyremoveTime();
+	public void initTimes();
 	
 	
 	
