@@ -1,5 +1,8 @@
 package client;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.security.KeyPair;
@@ -37,6 +40,7 @@ import hlib.hj.mlib.HomoOpeInt;
 import hlib.hj.mlib.HomoRand;
 import hlib.hj.mlib.HomoSearch;
 import hlib.hj.mlib.PaillierKey;
+import hlib.hj.mlib.RandomKeyIv;
 import utils.Cipher;
 import utils.Element;
 import utils.InsecureHostnameVerifier;
@@ -102,16 +106,50 @@ public class clientMasterSlave implements clientAPI{
 		client.register(JacksonFeature.class);
 		URI baseURI = UriBuilder.fromUri(targelUrl).build();
 		target = client.target(baseURI);
+		//
+		//		DetKey = HomoDet.generateKey();
+		//		SearchKey = HomoSearch.generateKey();
+		//		RandomKey  = HomoRand.generateKey();
+		//		IV = HomoRand.generateIV();
+		//		SumKey = HomoAdd.generateKey();
+		//		opeObject = new HomoOpeInt(key);
+		//		MultkeyPair = HomoMult.generateKey();
+		//		publicKey = (RSAPublicKey) MultkeyPair.getPublic();
+		//		privateKey = (RSAPrivateKey) MultkeyPair.getPrivate();	
 
-		DetKey = HomoDet.generateKey();
-		SearchKey = HomoSearch.generateKey();
-		RandomKey  = HomoRand.generateKey();
-		IV = HomoRand.generateIV();
-		SumKey = HomoAdd.generateKey();
-		opeObject = new HomoOpeInt(key);
-		MultkeyPair = HomoMult.generateKey();
-		publicKey = (RSAPublicKey) MultkeyPair.getPublic();
-		privateKey = (RSAPrivateKey) MultkeyPair.getPrivate();		
+		try {
+			FileReader reader = new FileReader("chaves.txt");
+			BufferedReader bufferedReader = new BufferedReader(reader);
+
+			String line;
+
+			line = bufferedReader.readLine();
+			System.out.println(line);
+			DetKey = HomoDet.keyFromString(line);
+
+			line = bufferedReader.readLine();
+			SearchKey = HomoSearch.keyFromString(line);
+
+			line = bufferedReader.readLine();
+			RandomKeyIv randomKeyIv =  HomoRand.keyIvFromString(line);
+			RandomKey = randomKeyIv.getKey();
+			IV = randomKeyIv.getiV();
+
+			line = bufferedReader.readLine();
+			SumKey = HomoAdd.keyFromString(line);
+
+			line = bufferedReader.readLine();
+			MultkeyPair = HomoMult.keyFromString(line);
+			publicKey = (RSAPublicKey) MultkeyPair.getPublic();
+			privateKey = (RSAPrivateKey) MultkeyPair.getPrivate();	
+			
+			opeObject = new HomoOpeInt(key);
+
+			reader.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		mapping = map;
 		this.securityType = securityType;
@@ -141,9 +179,9 @@ public class clientMasterSlave implements clientAPI{
 
 		PrivacysearchEntryContainingSentenceTime=0;
 
-		  PrivacysumAllTime=0;
+		PrivacysumAllTime=0;
 
-		  PrivacymultAllTime=0;
+		PrivacymultAllTime=0;
 	}
 
 	public clientMasterSlave(String targelUrl) {
@@ -187,7 +225,9 @@ public class clientMasterSlave implements clientAPI{
 			break;
 		case ENCRYPTED: case ENHANCED_ENCRYPTED:
 			long begin = getTime();
+
 			String EncKey = HomoDet.encrypt(DetKey, key);
+			System.err.println(EncKey);
 			PrivacygetTime += getTime() - begin;
 
 			Future<MyEntry> entryEncrypted = target.path("server/"+EncKey)
@@ -198,10 +238,18 @@ public class clientMasterSlave implements clientAPI{
 
 			future = executor.submit(new Callable<Map<String,String>>() {
 				public Map<String,String> call() throws InterruptedException, ExecutionException {
+					Map<String,String> map = null;
+					try {
+						
+
 					Map<String,String> m = entryEncrypted.get().getAttributes();
 					long begin = getTime();
-					Map<String,String> map = decryptMap(m);
+					map = decryptMap(m);
 					PrivacygetTime += getTime() - begin;
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
 					return map;
 				}});
 
@@ -565,6 +613,7 @@ public class clientMasterSlave implements clientAPI{
 	@Override
 	public Future<BigInteger> sum(String key1, String field, String key2) {
 		String url = getUrl();
+		System.err.println("masterslave soma");
 
 		Future<BigInteger> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -613,6 +662,10 @@ public class clientMasterSlave implements clientAPI{
 			Encfield = HomoDet.encrypt(DetKey, field);
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
+			
+			System.err.println(EncKey1);
+			System.err.println(EncKey2);
+			System.err.println(Encfield);
 			PrivacysumTime += getTime() - begin;
 
 			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/sum/"+url)
