@@ -1,7 +1,8 @@
 package utils;
 
+import java.io.Serializable;
 
-public class Element {
+public class Element implements Serializable{
 	
 	public String getField() {
 		return field;

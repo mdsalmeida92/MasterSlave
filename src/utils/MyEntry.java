@@ -2,9 +2,10 @@ package utils;
 
 
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class MyEntry{
+public class MyEntry implements Serializable{
 
 
 	private Map<String, String> attributes;

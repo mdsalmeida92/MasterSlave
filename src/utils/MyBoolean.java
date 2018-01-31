@@ -1,6 +1,8 @@
 package utils;
 
-public class MyBoolean {
+import java.io.Serializable;
+
+public class MyBoolean implements Serializable{
 	
 	private boolean Myboolean;
 
