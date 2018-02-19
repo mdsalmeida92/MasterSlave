@@ -1,6 +1,9 @@
 
 package server;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Calendar;
@@ -40,6 +43,7 @@ import utils.Element;
 import utils.MyBoolean;
 import utils.MyEntry;
 import utils.MyList;
+import utils.RequestType;
 
 
 @Path("/server")
@@ -78,6 +82,22 @@ public class ServerResources {
 
 	}
 
+	@DELETE
+	@Path("/flushall")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void flushall() {
+
+		try {
+			serverLogic.flushAll();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+
+
+
+	}
+	
 	@DELETE
 	@Path("/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)

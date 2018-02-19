@@ -94,7 +94,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyEntry set = (MyEntry) in.readObject(); 
@@ -106,7 +106,10 @@ public class BFTServerResources {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			return null;
-		}	
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 
@@ -114,11 +117,11 @@ public class BFTServerResources {
 	@Path("/{key}") 
 	@Consumes(MediaType.APPLICATION_JSON) 
 	public void putEntry(@PathParam("key") String key, MyEntry entry) throws InterruptedException { 
-		
+
 
 		try {
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		ObjectOutputStream out = new ObjectOutputStream(bos);
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ObjectOutputStream out = new ObjectOutputStream(bos);
 
 			out.writeInt(RequestType.PUTSET);
 			out.writeUTF(key);
@@ -129,7 +132,35 @@ public class BFTServerResources {
 		} catch(IOException ioe) {
 			System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
 
+		} catch (Exception e) {
+			e.printStackTrace();
+
 		}
+
+
+	}
+	
+	@DELETE
+	@Path("/flushall")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void flushall() {
+
+		try {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ObjectOutputStream out = new ObjectOutputStream(bos);
+
+			out.writeInt(RequestType.FLUSHALL);
+			out.flush();
+			clientProxy.invokeOrdered(bos.toByteArray());
+
+		} catch(IOException ioe) {
+			System.out.println("Exception flushing values: " + ioe.getMessage());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+
 
 
 	}
@@ -138,20 +169,22 @@ public class BFTServerResources {
 	@Path("/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void removeEntry(@PathParam("key") String key) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
 
-				out.writeInt(RequestType.REMOVESET);
-				out.writeUTF(key);
-				out.flush();
-				byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
+			out.writeInt(RequestType.REMOVESET);
+			out.writeUTF(key);
+			out.flush();
+			byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
 
-			} catch(IOException ioe) {
-				System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
+		} catch(IOException ioe) {
+			System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
 
-			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 
 
@@ -166,23 +199,25 @@ public class BFTServerResources {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
 
-				out.writeInt(RequestType.ADDELEMENT);
-				out.writeUTF(key);
-				out.writeObject(element);
-				out.flush();
-				byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
+			out.writeInt(RequestType.ADDELEMENT);
+			out.writeUTF(key);
+			out.writeObject(element);
+			out.flush();
+			byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
 
-			} catch(IOException ioe) {
-				System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
+		} catch(IOException ioe) {
+			System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
 
-			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@GET
 	@Path("/getElem")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String getElement(@QueryParam("key") String key, @QueryParam("field") String field) throws InterruptedException {
-		
+
 
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -194,7 +229,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String elem =  in.readUTF(); 
@@ -203,7 +238,10 @@ public class BFTServerResources {
 		} catch(IOException ioe) {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
-		}	
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 
 	}
 
@@ -227,7 +265,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyBoolean myboolean =  (MyBoolean) in.readObject(); 
@@ -237,10 +275,13 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
-		}	
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 
 	}
 
@@ -250,7 +291,7 @@ public class BFTServerResources {
 	public MyBoolean elementContainsSentenceEnc(@QueryParam("key") String key, 
 			@QueryParam("field") String field, 
 			@QueryParam("sentence") String sentence) throws InterruptedException {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -262,7 +303,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyBoolean myboolean =  (MyBoolean) in.readObject(); 
@@ -272,7 +313,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}	
@@ -302,7 +343,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyBoolean myboolean =  (MyBoolean) in.readObject(); 
@@ -312,7 +353,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}	
@@ -332,11 +373,10 @@ public class BFTServerResources {
 			out.writeInt(RequestType.NORMAL);
 			out.writeUTF(field);
 			out.writeUTF(sentence);
-
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList myList =  (MyList) in.readObject(); 
@@ -346,10 +386,13 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
-		}	
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@GET
@@ -369,7 +412,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList myList =  (MyList) in.readObject(); 
@@ -379,7 +422,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}	
@@ -407,7 +450,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList myList =  (MyList) in.readObject(); 
@@ -417,7 +460,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}	
@@ -431,17 +474,19 @@ public class BFTServerResources {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
 
-				out.writeInt(RequestType.INCR);
-				out.writeInt(RequestType.NORMAL);
-				out.writeUTF(key);
-				out.writeObject(value);
-				out.flush();
-				byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
+			out.writeInt(RequestType.INCR);
+			out.writeInt(RequestType.NORMAL);
+			out.writeUTF(key);
+			out.writeObject(value);
+			out.flush();
+			byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
 
-			} catch(IOException ioe) {
-				System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
+		} catch(IOException ioe) {
+			System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
 
-			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@PUT
@@ -453,17 +498,17 @@ public class BFTServerResources {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
 
-				out.writeInt(RequestType.INCR);
-				out.writeInt(RequestType.ENC);
-				out.writeUTF(key);
-				out.writeObject(value);
-				out.flush();
-				byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
+			out.writeInt(RequestType.INCR);
+			out.writeInt(RequestType.ENC);
+			out.writeUTF(key);
+			out.writeObject(value);
+			out.flush();
+			byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
 
-			} catch(IOException ioe) {
-				System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
+		} catch(IOException ioe) {
+			System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
 
-			}
+		}
 	}
 
 	@PUT
@@ -472,24 +517,24 @@ public class BFTServerResources {
 	public void incrEnEnc(@PathParam("key") String key, 
 			@QueryParam("iv") String iv,
 			@QueryParam("RandomKey") String RandomKey, Element value) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
 
-				out.writeInt(RequestType.INCR);
-				out.writeInt(RequestType.ONIONENC);
-				out.writeUTF(key);
-				out.writeObject(value);
-				out.writeUTF(iv);
-				out.writeUTF(RandomKey);
-				out.flush();
-				byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
+			out.writeInt(RequestType.INCR);
+			out.writeInt(RequestType.ONIONENC);
+			out.writeUTF(key);
+			out.writeObject(value);
+			out.writeUTF(iv);
+			out.writeUTF(RandomKey);
+			out.flush();
+			byte[] reply = clientProxy.invokeOrdered(bos.toByteArray());
 
-			} catch(IOException ioe) {
-				System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
+		} catch(IOException ioe) {
+			System.out.println("Exception putting value into hashmap: " + ioe.getMessage());
 
-			}
+		}
 	}
 
 
@@ -499,7 +544,7 @@ public class BFTServerResources {
 	public BigInteger sum(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -511,7 +556,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			BigInteger bigInt =  (BigInteger) in.readObject(); 
@@ -521,10 +566,13 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
-		}	
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 
 	}
 
@@ -547,14 +595,14 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
-
 			return bigInt;
 		} catch(IOException ioe) {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
+			ioe.printStackTrace();
 			return null;
 		}	
 
@@ -569,7 +617,7 @@ public class BFTServerResources {
 			@QueryParam("field")  String field, 
 			@QueryParam("nsquare")  String nsquare, 
 			@QueryParam("key2") String key2) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -581,11 +629,11 @@ public class BFTServerResources {
 			out.writeUTF(nsquare);
 			out.writeUTF(iv);
 			out.writeUTF(RandomKey);
-			
+
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
@@ -612,7 +660,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			BigInteger bigInt =  (BigInteger) in.readObject(); 
@@ -622,10 +670,13 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
-		}	
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 
 	}
 
@@ -635,7 +686,7 @@ public class BFTServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public String sumAllEnc(@QueryParam("field")  String field,
 			@QueryParam("nsquare")  String nsquare) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -646,7 +697,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
@@ -665,7 +716,7 @@ public class BFTServerResources {
 			@QueryParam("iv") String iv,
 			@QueryParam("RandomKey") String RandomKey,
 			@QueryParam("nsquare")  String nsquare) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -678,7 +729,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
@@ -696,7 +747,7 @@ public class BFTServerResources {
 	public BigInteger sumConst(@QueryParam("key") String key, 
 			@QueryParam("field")  String field, 
 			@QueryParam("const") int constant) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -708,7 +759,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			BigInteger bigInt =  (BigInteger) in.readObject(); 
@@ -718,10 +769,13 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
-		}	
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@GET
@@ -731,7 +785,7 @@ public class BFTServerResources {
 			@QueryParam("nsquare")  String nsquare, 
 			@QueryParam("field")  String field, 
 			@QueryParam("const") int constant) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -744,7 +798,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
@@ -780,7 +834,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
@@ -810,7 +864,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			long bigInt = in.readLong(); 
@@ -818,8 +872,12 @@ public class BFTServerResources {
 			return bigInt;
 		} catch(IOException ioe) {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
+			ioe.printStackTrace();
 			return 0;
-		}	
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
 
 	@GET
@@ -829,7 +887,7 @@ public class BFTServerResources {
 			@QueryParam("field")  String field, 
 			@QueryParam("publicKey")  String publicKey, 
 			@QueryParam("key2") String key2) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -842,7 +900,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
@@ -876,11 +934,11 @@ public class BFTServerResources {
 			out.writeUTF(publicKey);
 			out.writeUTF(iv);
 			out.writeUTF(RandomKey);
-			
+
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
@@ -905,7 +963,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			long bigInt = in.readLong(); 
@@ -914,7 +972,10 @@ public class BFTServerResources {
 		} catch(IOException ioe) {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return 0;
-		}	
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
 
 	@GET
@@ -932,7 +993,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
@@ -954,7 +1015,7 @@ public class BFTServerResources {
 			@QueryParam("iv") String iv,
 			@QueryParam("RandomKey") String RandomKey,
 			@QueryParam("publicKey")  String publicKey) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -967,7 +1028,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			String bigInt =  in.readUTF(); 
@@ -985,7 +1046,7 @@ public class BFTServerResources {
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyList searchElement( @QueryParam("field")  String field, 
 			@QueryParam("value") String value) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -997,7 +1058,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1007,7 +1068,10 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
+			e.printStackTrace();
+			return null;
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -1029,7 +1093,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1039,7 +1103,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1052,7 +1116,7 @@ public class BFTServerResources {
 			@QueryParam("iv") String iv,
 			@QueryParam("RandomKey") String RandomKey,
 			@QueryParam("value") String value) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -1066,7 +1130,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1076,7 +1140,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1096,7 +1160,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1106,7 +1170,10 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
+			e.printStackTrace();
+			return null;
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -1126,7 +1193,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1136,7 +1203,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1160,7 +1227,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1170,7 +1237,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1181,7 +1248,7 @@ public class BFTServerResources {
 	@Path("/orderEntrys")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyList orderEntrys( @QueryParam("query")  String field) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -1191,7 +1258,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1201,7 +1268,10 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
+			e.printStackTrace();
+			return null;
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -1211,7 +1281,7 @@ public class BFTServerResources {
 	@Path("/orderEntrys/Encrypted/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyList orderEntrysEnc( @QueryParam("query")  String field) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -1221,7 +1291,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1231,7 +1301,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1254,7 +1324,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1264,7 +1334,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1275,7 +1345,7 @@ public class BFTServerResources {
 	@Path("/searchGreaterThan")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyList searchGreaterThan( @QueryParam("field")  String field, @QueryParam("value")  String value) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -1286,7 +1356,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1296,7 +1366,10 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
+			e.printStackTrace();
+			return null;
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -1316,7 +1389,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1326,7 +1399,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1351,7 +1424,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1361,7 +1434,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1381,7 +1454,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1391,7 +1464,10 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
+			e.printStackTrace();
+			return null;
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -1412,7 +1488,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1422,7 +1498,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1447,7 +1523,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyList mylist =  (MyList) in.readObject(); 
@@ -1457,7 +1533,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1470,7 +1546,7 @@ public class BFTServerResources {
 	public MyBoolean valuegreaterThan(@QueryParam("key1") String key1, 
 			@QueryParam("field")  String field, 
 			@QueryParam("key2") String key2) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -1482,7 +1558,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyBoolean MyBoolean =  (MyBoolean) in.readObject(); 
@@ -1492,7 +1568,10 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
+			e.printStackTrace();
+			return null;
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -1516,7 +1595,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyBoolean MyBoolean =  (MyBoolean) in.readObject(); 
@@ -1526,7 +1605,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}
@@ -1541,7 +1620,7 @@ public class BFTServerResources {
 			@QueryParam("key2") String key2,
 			@QueryParam("iv") String iv,
 			@QueryParam("RandomKey") String RandomKey) {
-		
+
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
@@ -1555,7 +1634,7 @@ public class BFTServerResources {
 			out.flush();
 
 			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
-			
+
 			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
 			ObjectInput in = new ObjectInputStream(bis);
 			MyBoolean MyBoolean =  (MyBoolean) in.readObject(); 
@@ -1565,7 +1644,7 @@ public class BFTServerResources {
 			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
 			return null;
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 			return null;
 		}

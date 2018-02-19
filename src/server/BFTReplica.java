@@ -8,11 +8,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import bftsmart.tom.MessageContext;
@@ -49,6 +51,7 @@ public class BFTReplica extends DefaultRecoverable{
 		CommandLine line;
 		try {
 			line = parser.parse( options, args );
+
 			if(line.hasOption("port")) {
 				port = line.getOptionValue("port");
 
@@ -60,9 +63,13 @@ public class BFTReplica extends DefaultRecoverable{
 				path = line.getOptionValue("path");
 			}
 		} catch (ParseException e) {
-			
-			e.printStackTrace();
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp( "BFT replica", options );
 		}
+
+		System.err.println(port);
+		System.err.println(id);
+		System.err.println(path);
 
 		new BFTReplica(Integer.parseInt(port), Integer.parseInt(id),path);
 	}
@@ -75,9 +82,11 @@ public class BFTReplica extends DefaultRecoverable{
 		try {
 			ByteArrayInputStream bis = new ByteArrayInputStream(command);
 			ObjectInput in = new ObjectInputStream(bis);
+
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ObjectOutput out = new ObjectOutputStream(bos); 
+
 			int reqType = in.readInt();
-			String key = null;
-			System.err.println("op type:  "+reqType);
 			switch (reqType) {
 
 			case RequestType.PUTSET:
@@ -96,8 +105,86 @@ public class BFTReplica extends DefaultRecoverable{
 				incr(in);
 				break;
 
+			case RequestType.GETSET:
+				getEntry(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.GETELEMENT:
+				getElement(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.ELEMENT_CONTAINS_SEQUENCE:
+				elementContainsSentence(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.SEARCHENTRYCONTAININGSENTENCE:
+				searchEntryContainingWord(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.SUM:
+				sum(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.SUMALL:
+				sumAll(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.MULTCONST:
+				sumConst(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.MULT:
+				mult(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.MULTALL:
+				multAll(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.SEARCHELEMENT:
+				searchElement(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.SEARCHENTRY:
+				searchEntrys(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.ORDERENTRYS:
+				orderEntrys(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+			case RequestType.SEARCHGREATERTHAN:
+				searchGreaterThan(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+
+			case RequestType.SEARCHLESSERTHAN:
+				searchLesserThan(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+
+			case RequestType.VALUEGREATERTHAN:
+				valuegreaterThan(in, out);
+				resultBytes = bos.toByteArray();
+				break;
+
+
 			default:
-				System.out.println("Unknown request type: " + reqType);
+				System.out.println("executeSingle Unknown request type: " + reqType);
 				break;
 			}
 		} catch (IOException e) {
@@ -123,7 +210,6 @@ public class BFTReplica extends DefaultRecoverable{
 			ObjectOutput out = new ObjectOutputStream(bos); 
 			int reqType = in.readInt();
 
-			System.err.println("op type:  "+reqType);
 			switch (reqType) {
 			case RequestType.GETSET:
 				getEntry(in, out);
@@ -176,7 +262,7 @@ public class BFTReplica extends DefaultRecoverable{
 				break;
 
 			case RequestType.SEARCHENTRY:
-				searchEntryContainingWord(in, out);
+				searchEntrys(in, out);
 				resultBytes = bos.toByteArray();
 				break;
 
@@ -205,7 +291,7 @@ public class BFTReplica extends DefaultRecoverable{
 
 
 			default:
-				System.out.println("Unknown request type: " + reqType);
+				System.out.println("appExecuteUnordered Unknown request type: " + reqType);
 				break;
 			}
 
@@ -214,7 +300,7 @@ public class BFTReplica extends DefaultRecoverable{
 			e.printStackTrace();
 
 		} catch (InterruptedException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -227,6 +313,7 @@ public class BFTReplica extends DefaultRecoverable{
 		try {
 			ByteArrayInputStream bis = new ByteArrayInputStream(state);
 			ObjectInput in = new ObjectInputStream(bis);
+			@SuppressWarnings("unchecked")
 			Map<String,Map<String,String>> map = (Map<String,Map<String,String>>) in.readObject();
 			serverLogic.flushAll();
 			for(String key: map.keySet()) {
@@ -281,7 +368,7 @@ public class BFTReplica extends DefaultRecoverable{
 			out.writeObject(entry);
 
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -293,10 +380,10 @@ public class BFTReplica extends DefaultRecoverable{
 			MyEntry entry = (MyEntry) in.readObject();
 			serverLogic.putEntry(key, entry);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -308,7 +395,7 @@ public class BFTReplica extends DefaultRecoverable{
 			String key = in.readUTF();
 			serverLogic.removeEntry(key);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -320,10 +407,10 @@ public class BFTReplica extends DefaultRecoverable{
 			Element element = (Element) in.readObject();
 			serverLogic.updateEntry(key, element);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -338,7 +425,7 @@ public class BFTReplica extends DefaultRecoverable{
 			out.writeUTF(elem);
 			out.flush();
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -371,7 +458,7 @@ public class BFTReplica extends DefaultRecoverable{
 			}
 			out.writeObject(myboolean);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -404,7 +491,7 @@ public class BFTReplica extends DefaultRecoverable{
 			}
 			out.writeObject(myList);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -434,10 +521,10 @@ public class BFTReplica extends DefaultRecoverable{
 				break;
 			}
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -460,21 +547,22 @@ public class BFTReplica extends DefaultRecoverable{
 			case RequestType.ENC:
 				nsquare = in.readUTF();
 				sum = serverLogic.sumEnc(key1, field, nsquare, key2);
-				out.writeObject(sum);
+				out.writeUTF(sum);
 				break;
 			case RequestType.ONIONENC:
 				nsquare = in.readUTF();
 				String iv = in.readUTF();
 				String RandomKey = in.readUTF();
 				sum = serverLogic.sumEnEnc(key1, iv, RandomKey, field, nsquare, key2);
-				out.writeObject(sum);
+				out.writeUTF(sum);
 				break;
 
 			default:
 				break;
 			}
+			out.flush();
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -510,8 +598,9 @@ public class BFTReplica extends DefaultRecoverable{
 			default:
 				break;
 			}
+			out.flush();
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -546,8 +635,9 @@ public class BFTReplica extends DefaultRecoverable{
 			default:
 				break;
 			}
+			out.flush();
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -564,7 +654,8 @@ public class BFTReplica extends DefaultRecoverable{
 			switch (reqType) {
 			case RequestType.NORMAL:
 				long sumBig = serverLogic.mult(key1, field, key2);
-				out.writeObject(sumBig);
+				out.writeLong(sumBig);
+				out.flush();
 				break;
 			case RequestType.ENC:
 				publicKey = in.readUTF();
@@ -575,15 +666,16 @@ public class BFTReplica extends DefaultRecoverable{
 				publicKey = in.readUTF();
 				String iv = in.readUTF();
 				String RandomKey = in.readUTF();
-				mult = serverLogic.multEnEnc(key1, iv, RandomKey, field, publicKey, key2);
+				mult = serverLogic.multEnEnc(key1, field, iv, RandomKey, publicKey, key2);
 				out.writeUTF(mult);
 				break;
 
 			default:
 				break;
 			}
+			out.flush();
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -600,25 +692,27 @@ public class BFTReplica extends DefaultRecoverable{
 			case RequestType.NORMAL:
 				long sumBig = serverLogic.multAll(field);
 				out.writeLong(sumBig);
+				out.flush();
 				break;
 			case RequestType.ENC:
 				publicKey = in.readUTF();
 				sum = serverLogic.multAllEnc(field, publicKey);
-				out.writeObject(sum);
+				out.writeUTF(sum);
 				break;
 			case RequestType.ONIONENC:
 				publicKey = in.readUTF();
 				String iv = in.readUTF();
 				String RandomKey = in.readUTF();
 				sum = serverLogic.multAllEnEnc(field, iv, RandomKey, publicKey);
-				out.writeObject(sum);
+				out.writeUTF(sum);
 				break;
 
 			default:
 				break;
 			}
+			out.flush();
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -654,7 +748,7 @@ public class BFTReplica extends DefaultRecoverable{
 			}
 			out.writeObject(mylist);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -664,6 +758,7 @@ public class BFTReplica extends DefaultRecoverable{
 		try {
 			MyList mylist = null;
 			int reqType = in.readInt();
+			@SuppressWarnings("unchecked")
 			List<String>  query = (List<String>) in.readObject();
 
 			switch (reqType) {
@@ -689,10 +784,10 @@ public class BFTReplica extends DefaultRecoverable{
 			}
 			out.writeObject(mylist);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
@@ -709,7 +804,12 @@ public class BFTReplica extends DefaultRecoverable{
 			switch (reqType) {
 			case RequestType.NORMAL:
 				mylist = serverLogic.orderEntrys(field);
+				List <String> l =mylist.getList();
+				for (Iterator iterator = l.iterator(); iterator.hasNext();) {
+					String string = (String) iterator.next();
+					System.err.println(string);
 
+				}
 				break;
 			case RequestType.ENC:
 
@@ -729,7 +829,7 @@ public class BFTReplica extends DefaultRecoverable{
 			}
 			out.writeObject(mylist);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -745,7 +845,12 @@ public class BFTReplica extends DefaultRecoverable{
 			switch (reqType) {
 			case RequestType.NORMAL:
 				mylist = serverLogic.searchGreaterThan(field, value);
-
+//				List <String> l =mylist.getList();
+//				for (Iterator iterator = l.iterator(); iterator.hasNext();) {
+//					String string = (String) iterator.next();
+//					System.err.println(string);
+//
+//				}
 				break;
 			case RequestType.ENC:
 
@@ -765,7 +870,7 @@ public class BFTReplica extends DefaultRecoverable{
 			}
 			out.writeObject(mylist);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -804,7 +909,7 @@ public class BFTReplica extends DefaultRecoverable{
 			}
 			out.writeObject(mylist);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -846,7 +951,7 @@ public class BFTReplica extends DefaultRecoverable{
 			}
 			out.writeObject(mylist);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 

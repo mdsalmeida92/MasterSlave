@@ -1,20 +1,19 @@
 package utils;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class MyList {
+public class MyList implements Serializable {
 	
-	public List getList() {
-		return list;
-	}
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-	public void setList(List list) {
-		this.list = list;
-	}
 
-	List list;
-
-	public MyList(List list) {
+	private List<String> list;
+	
+	public MyList(List<String> list) {
 		super();
 		this.list = list;
 	}
@@ -22,5 +21,14 @@ public class MyList {
 	public MyList() {
 
 	}
+	
+	public List<String> getList() {
+		return list;
+	}
+
+	public void setList(List<String> list) {
+		this.list = list;
+	}
+
 
 }

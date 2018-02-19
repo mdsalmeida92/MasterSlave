@@ -3,6 +3,7 @@ package server;
 import java.math.BigInteger;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -58,9 +59,11 @@ public class ServerLogic {
 
 	public ServerLogic(int port){
 		jedisPool = new JedisPool(new JedisPoolConfig(), "localhost", port);
+
 		Jedis jedis= jedisPool.getResource();
 		jedis.connect();
 		jedis.flushAll();
+		System.err.println(port);
 		putTime = 0;
 		getTime= 0;
 		getElemTime = 0;
@@ -222,7 +225,7 @@ public class ServerLogic {
 				if(jedis.hget(key, field).contains(sentence))
 					l.add(key);
 			});
-
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchEntryContainingSentenceTime += getTime() - begin;
 			return list;
@@ -245,7 +248,7 @@ public class ServerLogic {
 				if(HomoSearch.pesquisa(sentence,elem)|| HomoSearch.searchAll(sentence, elem))
 					l.add(key);
 			});
-
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchEntryContainingSentenceTime += getTime() - begin;
 			return list;
@@ -270,7 +273,7 @@ public class ServerLogic {
 				if(HomoSearch.pesquisa(sentence,elem)|| HomoSearch.searchAll(sentence, elem))
 					l.add(key);
 			});
-
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchEntryContainingSentenceTime += getTime() - begin;
 			return list;
@@ -289,6 +292,8 @@ public class ServerLogic {
 			else
 
 				jedis.hincrBy(key, value.getField(), Integer.valueOf(value.getElement()));
+
+				
 		}
 		incrTime += getTime() - begin;
 
@@ -349,6 +354,7 @@ public class ServerLogic {
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
 		return new BigInteger("0");
@@ -375,6 +381,7 @@ public class ServerLogic {
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println("errorsdsd" + e.getMessage());
 		}
 		throw new WebApplicationException( );
@@ -405,6 +412,7 @@ public class ServerLogic {
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println("errorsdsd" + e.getMessage());
 		}
 		throw new WebApplicationException( );
@@ -429,6 +437,7 @@ public class ServerLogic {
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
 		return new BigInteger("0");
@@ -464,6 +473,7 @@ public class ServerLogic {
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
 		return null;
@@ -502,6 +512,7 @@ public class ServerLogic {
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
 		return null;
@@ -639,6 +650,7 @@ public class ServerLogic {
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
 		return 0;
@@ -670,6 +682,7 @@ public class ServerLogic {
 
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
+			e.printStackTrace();
 		}
 		return null;
 
@@ -705,6 +718,7 @@ public class ServerLogic {
 
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
+			e.printStackTrace();
 		}
 		return null;
 
@@ -718,6 +732,7 @@ public class ServerLogic {
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			List<String> l = jedis.smembers(field+":"+value).stream().collect(Collectors.toList());
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchElemTime += getTime() - begin;
 			return list;
@@ -732,6 +747,7 @@ public class ServerLogic {
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			List<String> l = jedis.smembers(field+":"+value).stream().collect(Collectors.toList());
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchElemTime += getTime() - begin;
 			return list;
@@ -756,6 +772,7 @@ public class ServerLogic {
 					l.add(key);
 				}
 			}
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchElemTime += getTime() - begin;
 			return list;
@@ -782,6 +799,7 @@ public class ServerLogic {
 
 			}
 			List<String> l = set.stream().collect(Collectors.toList());
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchEntrysTime += getTime() - begin;
 			return list;
@@ -807,7 +825,7 @@ public class ServerLogic {
 
 			}
 			List<String> l = set.stream().collect(Collectors.toList());
-
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchEntrysTime += getTime() - begin;
 			return list;
@@ -856,7 +874,7 @@ public class ServerLogic {
 			}
 
 			List<String> l = finalset.stream().collect(Collectors.toList());
-
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchEntrysTime += getTime() - begin;
 			return list;
@@ -874,6 +892,12 @@ public class ServerLogic {
 					double b = Integer.valueOf(m2.getAttributes().get(field));
 					if (a > b)
 						return 1;
+					else if(a==b) {
+						if(m1.getKey().compareTo(m2.getKey()) <0)
+							return 1;
+						else 
+							return -1;
+					}
 					else return -1;
 				}
 			};
@@ -888,6 +912,7 @@ public class ServerLogic {
 			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
 			List<String> l = new LinkedList<>();
 			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			orderEntrysTime += getTime() - begin;
 			return list;
@@ -921,6 +946,7 @@ public class ServerLogic {
 			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
 			List<String> l = new LinkedList<>();
 			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			orderEntrysTime += getTime() - begin;
 			return list;
@@ -956,6 +982,7 @@ public class ServerLogic {
 			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
 			List<String> l = new LinkedList<>();
 			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			orderEntrysTime += getTime() - begin;
 			return list;
@@ -978,6 +1005,7 @@ public class ServerLogic {
 			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
 			List<String> l = new LinkedList<>();
 			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchGreaterTime+= getTime() - begin;
 			return list;
@@ -1003,6 +1031,7 @@ public class ServerLogic {
 			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
 			List<String> l = new LinkedList<>();
 			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchGreaterTime+= getTime() - begin;
 			return list;
@@ -1031,6 +1060,7 @@ public class ServerLogic {
 			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
 			List<String> l = new LinkedList<>();
 			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchGreaterTime+= getTime() - begin;
 			return list;
@@ -1056,6 +1086,7 @@ public class ServerLogic {
 			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
 			List<String> l = new LinkedList<>();
 			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchLesserTime+= getTime() - begin;
 			return list;
@@ -1081,6 +1112,7 @@ public class ServerLogic {
 			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
 			List<String> l = new LinkedList<>();
 			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchLesserTime+= getTime() - begin;
 			return list;
@@ -1108,6 +1140,7 @@ public class ServerLogic {
 			//MyListEntry list = new MyListEntry(s.stream().collect(Collectors.toList()));
 			List<String> l = new LinkedList<>();
 			s.forEach((entry) ->{ l.add(entry.getKey());} );
+			Collections.sort(l);
 			MyList list = new MyList(l);
 			searchLesserTime+= getTime() - begin;
 			return list;

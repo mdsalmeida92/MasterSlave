@@ -47,7 +47,6 @@ import utils.InsecureHostnameVerifier;
 import utils.MyBoolean;
 import utils.MyEntry;
 import utils.MyList;
-import utils.MyListEntry;
 import utils.SecurityType;
 
 public class clientMasterSlave implements clientAPI{
@@ -124,7 +123,6 @@ public class clientMasterSlave implements clientAPI{
 			String line;
 
 			line = bufferedReader.readLine();
-			System.out.println(line);
 			DetKey = HomoDet.keyFromString(line);
 
 			line = bufferedReader.readLine();
@@ -198,6 +196,7 @@ public class clientMasterSlave implements clientAPI{
 	}
 
 	public void Close() {
+		target.path("server/flushall").request().delete();
 		client.close();
 	}
 
@@ -227,7 +226,6 @@ public class clientMasterSlave implements clientAPI{
 			long begin = getTime();
 
 			String EncKey = HomoDet.encrypt(DetKey, key);
-			System.err.println(EncKey);
 			PrivacygetTime += getTime() - begin;
 
 			Future<MyEntry> entryEncrypted = target.path("server/"+EncKey)
@@ -280,7 +278,7 @@ public class clientMasterSlave implements clientAPI{
 			MyEntry EncEntry = new MyEntry(encryptMap(set));
 			PrivacyputTime += getTime() - begin;
 
-			String url = getUrl();
+			getUrl();
 
 			target.path("server/" +EncKey)
 			.request()
@@ -310,7 +308,7 @@ public class clientMasterSlave implements clientAPI{
 			long begin = getTime();
 			String EncKey = HomoDet.encrypt(DetKey, key);
 			PrivacyremoveTime += getTime() - begin;
-			String url = getUrl();
+			getUrl();
 			target.path("server/" +EncKey)
 			.request()
 			.delete();
@@ -336,7 +334,7 @@ public class clientMasterSlave implements clientAPI{
 			String EncKey = HomoDet.encrypt(DetKey, key);
 			Element EncElem = encryptElement(field, element);
 			PrivacyupdateTime += getTime() - begin;
-			String url = getUrl();
+			getUrl();
 			Response response = target.path("server/"+EncKey)
 					.request()
 					.put(Entity.entity( EncElem, MediaType.APPLICATION_JSON));
@@ -367,7 +365,7 @@ public class clientMasterSlave implements clientAPI{
 			String EncKey = HomoDet.encrypt(DetKey, key);
 			String Encfield = HomoDet.encrypt(DetKey, field);
 			PrivacyGetElementTime += getTime() - begin;
-			String url = getUrl();
+			getUrl();
 			Future<String> response = target.queryParam("key", EncKey).queryParam("field", Encfield)
 					.path("server/getElem")
 					.request()
@@ -499,6 +497,7 @@ public class clientMasterSlave implements clientAPI{
 			future = executor.submit(new Callable<List<String>>() {
 				public List<String> call() throws InterruptedException, ExecutionException {
 
+
 					List<String> l = Enclist.get().getList();
 					List<String> c = new LinkedList<String>();
 					long begin = getTime();
@@ -528,6 +527,7 @@ public class clientMasterSlave implements clientAPI{
 
 			future = executor.submit(new Callable<List<String>>() {
 				public List<String> call() throws InterruptedException, ExecutionException {
+
 
 					List<String> l = EnEnclist.get().getList();
 					List<String> c = new LinkedList<String>();
@@ -613,7 +613,6 @@ public class clientMasterSlave implements clientAPI{
 	@Override
 	public Future<BigInteger> sum(String key1, String field, String key2) {
 		String url = getUrl();
-		System.err.println("masterslave soma");
 
 		Future<BigInteger> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -662,10 +661,6 @@ public class clientMasterSlave implements clientAPI{
 			Encfield = HomoDet.encrypt(DetKey, field);
 			String RandKey = HelpSerial.toString(RandomKey);
 			String iv = Base64.encodeBase64String(IV);
-			
-			System.err.println(EncKey1);
-			System.err.println(EncKey2);
-			System.err.println(Encfield);
 			PrivacysumTime += getTime() - begin;
 
 			Future<String> EnEncresponse = target.queryParam("iv", iv).queryParam("RandomKey", RandKey).queryParam("nsquare", SumKey.getNsquare().toString()).queryParam("key1", EncKey1).queryParam("key2", EncKey2).queryParam("field", Encfield).path("server/sum/"+url)
@@ -995,6 +990,7 @@ public class clientMasterSlave implements clientAPI{
 
 			future = executor.submit(new Callable<List<String>>() {
 				public List<String> call() throws InterruptedException, ExecutionException {
+
 					List<String> l = Enclist.get().getList();
 					List<String> c = new LinkedList<String>();
 					long begin = getTime();
@@ -1047,9 +1043,6 @@ public class clientMasterSlave implements clientAPI{
 
 		Future<List<String>> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
-		String Encfield = null;
-		String Encvalue = null;
-
 		long begin=0;
 		switch (securityType) {
 		case NORMAL:
@@ -1132,7 +1125,6 @@ public class clientMasterSlave implements clientAPI{
 		Future<List<String>> future = null;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		String Encfield = null;
-		String Encvalue = null;
 		long begin=0;
 		switch (securityType) {
 		case NORMAL:

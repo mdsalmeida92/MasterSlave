@@ -8,18 +8,13 @@ import java.util.Map;
 public class MyEntry implements Serializable{
 
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private Map<String, String> attributes;
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-
 	private String key;
-
+	
 	public MyEntry() {
 	}
 
@@ -31,6 +26,15 @@ public class MyEntry implements Serializable{
 	public MyEntry(String key, Map<String, String> attributes) {
 		this.key = key;
 		this.attributes = attributes;
+	}
+	
+	
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	public void setAttributes(Map<String, String> attributes) {

@@ -118,7 +118,11 @@ public class test {
 		searchElemTest(client, map, map2);
 		searchEntriesTest(client, map, map2);
 		orderEntrysTest(client, map, map2, map3);
-		searchGreaterThanTest(client, map, map2, map3);
+		for (int i = 0; i < 10; i++) {
+			searchGreaterThanTest(client, map, map2, map3);
+			
+		}
+
 		searchLesserThanTest(client, map, map2, map3);
 		isGreaterThanTest(client, map, map2);
 
@@ -129,7 +133,7 @@ public class test {
 
 	}
 
-	private static void multAll(clientAPI client, Map<String, String> map, Map<String, String> map2,
+	static void multAll(clientAPI client, Map<String, String> map, Map<String, String> map2,
 			Map<String, String> map3) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
@@ -150,7 +154,7 @@ public class test {
 
 	}
 
-	private static void sumAll(clientAPI client, Map<String, String> map, Map<String, String> map2,
+	static void sumAll(clientAPI client, Map<String, String> map, Map<String, String> map2,
 			Map<String, String> map3)throws InterruptedException, ExecutionException {
 
 		client.addSet("ola1005", map);
@@ -171,7 +175,7 @@ public class test {
 
 	}
 
-	private static void searchEntryContainingSentence(clientAPI client, Map<String, String> map, Map<String, String> map2, Map<String, String> map3) throws InterruptedException, ExecutionException{
+	static void searchEntryContainingSentence(clientAPI client, Map<String, String> map, Map<String, String> map2, Map<String, String> map3) throws InterruptedException, ExecutionException{
 
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
@@ -191,7 +195,7 @@ public class test {
 
 	}
 
-	private static void elementContainsSentence(clientAPI client, Map<String, String> map)throws InterruptedException, ExecutionException {
+	static void elementContainsSentence(clientAPI client, Map<String, String> map)throws InterruptedException, ExecutionException {
 		client.addSet("ola1005", map);
 		Future<Boolean> result = client.elementContainsSentence("ola1005", "field6", "Saw yet kindness too");
 		boolean elem = result.get();
@@ -203,7 +207,7 @@ public class test {
 
 	}
 
-	private static void getElementTest(clientAPI client, Map<String, String> map)throws InterruptedException, ExecutionException {
+	static void getElementTest(clientAPI client, Map<String, String> map)throws InterruptedException, ExecutionException {
 
 		client.addSet("ola1005", map);
 		Future<String> result = client.getElement("ola1005", "field1");
@@ -261,6 +265,7 @@ public class test {
 		Future<Map<String,String>>  myEntry =  client.getSet("ola1005");
 		Map<String,String> mapGET = myEntry.get();
 		client.removeSet("ola1005");
+		System.err.println(map.get("field3") + "            "+mapGET.get("field3") );
 		assert Integer.valueOf(map.get("field3")) +1 ==   Integer.valueOf(mapGET.get("field3"));
 
 
@@ -299,7 +304,7 @@ public class test {
 		client.addSet("ola1005", map);
 		client.addSet("ola1006", map2);
 		Future<BigInteger> value = client.mult("ola1005", "field4", "ola1006");
-
+System.err.println("mult value   "+value.get().longValue());
 		assert value.get().longValue() == 30;
 		client.removeSet("ola1005");
 		client.removeSet("ola1006");

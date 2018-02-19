@@ -31,6 +31,7 @@ public class RequestType {
     public static final int NORMAL = 1;
     public static final int ENC = 2;
     public static final int ONIONENC = 3;
+	public static final int FLUSHALL = 0;
     
 
 }
