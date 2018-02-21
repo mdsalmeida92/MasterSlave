@@ -5,6 +5,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -23,6 +24,7 @@ import org.apache.commons.codec.binary.Base64;
 
 import hlib.hj.mlib.HelpSerial;
 import hlib.hj.mlib.HomoAdd;
+import hlib.hj.mlib.HomoDet;
 import hlib.hj.mlib.HomoMult;
 import hlib.hj.mlib.HomoRand;
 import hlib.hj.mlib.HomoSearch;
@@ -98,6 +100,20 @@ public class ServerLogic {
 		}
 
 	}
+	
+	public MyEntry getEntryEncEnc(String key, String iv,
+			 String RandomKey) throws InterruptedException {
+
+		long begin = getTime();
+		try (Jedis jedis = jedisPool.getResource()) {
+			Map<String, String> map = jedis.hgetAll(key);
+			Map<String, String> resultMap = decryptMap(map, iv, RandomKey);
+			MyEntry entry = new MyEntry(resultMap);
+			getTime += getTime() - begin;
+			return entry;
+		}
+
+	}
 
 
 	public void putEntry(String key, MyEntry entry) throws InterruptedException { 
@@ -143,7 +159,7 @@ public class ServerLogic {
 	}
 
 
-	public String getElement(String key, @QueryParam("field") String field) throws InterruptedException {
+	public String getElement(String key,   String field) throws InterruptedException {
 
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
@@ -154,13 +170,27 @@ public class ServerLogic {
 
 
 	}
+	
+	public String getElementEncEnc(String key,   String field, String iv,
+			 String RandomKey) throws InterruptedException {
+
+		long begin = getTime();
+		try (Jedis jedis = jedisPool.getResource()) {
+			String elem = jedis.hget(key, field);
+			String result = RemoveEncryptLayer(RandomKey, iv, elem);
+			getElemTime += getTime() - begin;
+			return result;
+		}
+
+
+	}
 
 
 
 
 	public MyBoolean elementContainsSentence(String key, 
-			@QueryParam("field") String field, 
-			@QueryParam("sentence") String sentence) throws InterruptedException {
+			  String field, 
+			  String sentence) throws InterruptedException {
 
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
@@ -177,8 +207,8 @@ public class ServerLogic {
 
 
 	public MyBoolean elementContainsSentenceEnc(String key, 
-			@QueryParam("field") String field, 
-			@QueryParam("sentence") String sentence) throws InterruptedException {
+			  String field, 
+			  String sentence) throws InterruptedException {
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			String elem = jedis.hget(key, field);
@@ -195,10 +225,10 @@ public class ServerLogic {
 
 
 	public MyBoolean elementContainsSentenceEnEnc(String key, 
-			@QueryParam("iv") String iv,
-			@QueryParam("RandomKey") String RandomKey,
-			@QueryParam("field") String field,
-			@QueryParam("sentence") String sentence) throws InterruptedException {
+			  String iv,
+			  String RandomKey,
+			  String field,
+			  String sentence) throws InterruptedException {
 		long begin = getTime();
 
 		try (Jedis jedis = jedisPool.getResource()) {
@@ -215,7 +245,7 @@ public class ServerLogic {
 
 
 	public MyList searchEntryContainingWord(String field, 
-			@QueryParam("sentence") String sentence) throws InterruptedException {
+			String sentence) throws InterruptedException {
 
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
@@ -237,7 +267,7 @@ public class ServerLogic {
 
 
 	public MyList searchEntryContainingWordEnc(String field, 
-			@QueryParam("sentence") String sentence) throws InterruptedException {
+			 String sentence) throws InterruptedException {
 
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
@@ -260,9 +290,9 @@ public class ServerLogic {
 
 
 	public MyList searchEntryContainingWordEnEnc(String field, 
-			@QueryParam("iv") String iv,
-			@QueryParam("RandomKey") String RandomKey,
-			@QueryParam("sentence") String sentence) throws InterruptedException {
+			 String iv,
+			 String RandomKey,
+			 String sentence) throws InterruptedException {
 
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
@@ -318,8 +348,8 @@ public class ServerLogic {
 
 
 	public void incrEnEnc(String key, 
-			@QueryParam("iv") String iv,
-			@QueryParam("RandomKey") String RandomKey, Element value) {
+			 String iv,
+			 String RandomKey, Element value) {
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			if ( ! jedis.exists(key))
@@ -407,7 +437,7 @@ public class ServerLogic {
 				String v2 = RemoveEncryptLayer(RandomKey, iv,jedis.hget(key2, field));
 				BigInteger result = HomoAdd.sum(new BigInteger(v1), new BigInteger(v2), new BigInteger(nsquare));
 				sumTime += getTime() - begin;
-				return AddEncryptLayer(RandomKey, iv, result.toString());
+				return result.toString();
 
 			}
 
@@ -449,7 +479,7 @@ public class ServerLogic {
 
 
 	public String sumAllEnc(String field,
-			@QueryParam("nsquare")  String nsquare) {
+			   String nsquare) {
 		long begin = getTime();
 		try {
 			try (Jedis jedis = jedisPool.getResource()) {
@@ -507,7 +537,7 @@ public class ServerLogic {
 
 				}
 				sumAllTime += getTime() - begin;
-				return  AddEncryptLayer(RandomKey, iv, result.toString());
+				return  result.toString();
 
 			}
 
@@ -569,7 +599,7 @@ public class ServerLogic {
 			BigInteger result = HomoAdd.mult(new BigInteger(RemoveEncryptLayer(RandomKey, iv,jedis.hget(key, field))), constant, new BigInteger(nsquare));
 
 			sumConstTime += getTime() - begin;
-			return  AddEncryptLayer(RandomKey, iv, result.toString());
+			return  result.toString();
 
 		}
 
@@ -627,7 +657,7 @@ public class ServerLogic {
 
 
 			multTime += getTime() - begin;
-			return  AddEncryptLayer(RandomKey, iv, result.toString());
+			return  result.toString();
 		}		
 
 
@@ -712,7 +742,7 @@ public class ServerLogic {
 				}
 
 				multAllTime += getTime() - begin;
-				return AddEncryptLayer(RandomKey, iv, result.toString());
+				return result.toString();
 
 			}
 
@@ -1122,8 +1152,8 @@ public class ServerLogic {
 
 
 	public MyList searchLesserThanEnEnc(  String field,   String value,
-			@QueryParam("iv") String iv,
-			@QueryParam("RandomKey") String RandomKey) {
+			  String iv,
+			  String RandomKey) {
 		long begin = getTime();
 
 		try (Jedis jedis = jedisPool.getResource()) {
@@ -1215,6 +1245,22 @@ public class ServerLogic {
 		SecretKey RandKey = (SecretKey)HelpSerial.fromString(RandomKey);
 		return  HomoRand.encrypt(RandKey, initV, elem);
 	}
+	
+	private Map<String, String> decryptMap(Map<String, String> set, String iv,
+			 String RandomKey){
+
+		Map<String,String> map = new HashMap<String,String>();
+		set.forEach((k, v) -> { 
+			//System.out.println(k + "   " +v);
+			String key = k;
+			String value = RemoveEncryptLayer(RandomKey, iv, v);
+			//System.out.println(key + "   " +value);
+			map.put(key, value);
+
+		}); 
+
+		return map;
+	} 
 
 	private long getTime() {
 		return Calendar.getInstance().getTimeInMillis();

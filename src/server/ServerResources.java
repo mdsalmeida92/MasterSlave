@@ -65,6 +65,16 @@ public class ServerResources {
 	}
 
 	@GET
+	@Path("/Encrypted/{key}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MyEntry getEntry(@PathParam("key") String key,
+			@QueryParam("iv") String iv,
+			@QueryParam("RandomKey") String RandomKey) throws InterruptedException {
+
+		return serverLogic.getEntryEncEnc(key, iv, RandomKey);
+	}
+	
+	@GET
 	@Path("/{key}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public MyEntry getEntry(@PathParam("key") String key) throws InterruptedException {
@@ -122,6 +132,16 @@ public class ServerResources {
 
 	}
 
+	@GET
+	@Path("/getElem/Encrypted")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String getElement(@QueryParam("key") String key, 
+			@QueryParam("field") String field,
+			@QueryParam("iv") String iv,
+			@QueryParam("RandomKey") String RandomKey) throws InterruptedException {
+		return serverLogic.getElementEncEnc(key, field, iv, RandomKey);
+
+	}
 
 
 	@GET
