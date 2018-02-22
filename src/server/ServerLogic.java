@@ -134,6 +134,7 @@ public class ServerLogic {
 		long begin = getTime();
 		try (Jedis jedis = jedisPool.getResource()) {
 			Map<String, String> map = jedis.hgetAll(key);
+			jedis.srem("keys", key);
 			map.forEach((k, v) ->{ 
 				jedis.srem(k+":"+v, key);
 				jedis.srem(":"+k+":", key);});

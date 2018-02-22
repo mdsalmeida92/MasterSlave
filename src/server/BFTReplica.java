@@ -804,12 +804,12 @@ public class BFTReplica extends DefaultRecoverable{
 			switch (reqType) {
 			case RequestType.NORMAL:
 				mylist = serverLogic.orderEntrys(field);
-				List <String> l =mylist.getList();
-				for (Iterator iterator = l.iterator(); iterator.hasNext();) {
-					String string = (String) iterator.next();
-					System.err.println(string);
-
-				}
+//				List <String> l =mylist.getList();
+//				for (Iterator iterator = l.iterator(); iterator.hasNext();) {
+//					String string = (String) iterator.next();
+//					System.err.println(string);
+//
+//				}
 				break;
 			case RequestType.ENC:
 
