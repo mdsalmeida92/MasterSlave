@@ -29,10 +29,12 @@ import utils.RequestType;
 public class BFTReplica extends DefaultRecoverable{
 
 	public ServerLogic serverLogic;
+	public boolean byzantine;
 
-	public BFTReplica(int port, int id, String configpath){
+	public BFTReplica(int port, int id, String configpath, boolean byzantine){
 
 		serverLogic = new ServerLogic(port);
+		this.byzantine = byzantine;
 
 		new ServiceReplica(id,configpath, this,this,null,null);
 
@@ -45,13 +47,19 @@ public class BFTReplica extends DefaultRecoverable{
 		options.addOption("port", true, "redis port");
 		options.addOption("id", true, "replica id");
 		options.addOption("path", true, "configpath");
+		options.addOption("byzantine", false, "byzantine");
 		String path = "/home/mario/eclipse-workspace/MasterSlaveRedis/config/";
 		String port = "6379";
 		String id = "0";
+		boolean byzantine = false;
 		CommandLine line;
 		try {
 			line = parser.parse( options, args );
 
+			if(line.hasOption("byzantine")) {
+				byzantine = true;
+
+			}
 			if(line.hasOption("port")) {
 				port = line.getOptionValue("port");
 
@@ -71,7 +79,7 @@ public class BFTReplica extends DefaultRecoverable{
 		System.err.println(id);
 		System.err.println(path);
 
-		new BFTReplica(Integer.parseInt(port), Integer.parseInt(id),path);
+		new BFTReplica(Integer.parseInt(port), Integer.parseInt(id),path,byzantine);
 	}
 
 
@@ -194,7 +202,10 @@ public class BFTReplica extends DefaultRecoverable{
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-
+		if(byzantine) {
+			if(Math.random()<0.50)
+				return null;
+		}
 		return resultBytes;
 	}
 
@@ -303,7 +314,10 @@ public class BFTReplica extends DefaultRecoverable{
 
 			e.printStackTrace();
 		}
-
+		if(byzantine) {
+			if(Math.random()<0.50)
+				return null;
+		}
 		return resultBytes;
 	}
 
@@ -363,8 +377,22 @@ public class BFTReplica extends DefaultRecoverable{
 	private void getEntry(ObjectInput in, ObjectOutput out) throws InterruptedException {
 
 		try {
+			MyEntry entry = null;
+			int reqType = in.readInt();
 			String key = in.readUTF();
-			MyEntry entry = serverLogic.getEntry(key);
+			switch (reqType) {
+			case RequestType.NORMAL:
+				entry = serverLogic.getEntry(key);
+				break;
+			case RequestType.ONIONENC:
+				String iv = in.readUTF();
+				String RandomKey = in.readUTF();
+				entry = serverLogic.getEntryEncEnc(key, iv, RandomKey);
+				break;
+
+			default:
+				break;
+			}
 			out.writeObject(entry);
 
 		} catch (IOException e) {
@@ -804,12 +832,12 @@ public class BFTReplica extends DefaultRecoverable{
 			switch (reqType) {
 			case RequestType.NORMAL:
 				mylist = serverLogic.orderEntrys(field);
-//				List <String> l =mylist.getList();
-//				for (Iterator iterator = l.iterator(); iterator.hasNext();) {
-//					String string = (String) iterator.next();
-//					System.err.println(string);
-//
-//				}
+				//				List <String> l =mylist.getList();
+				//				for (Iterator iterator = l.iterator(); iterator.hasNext();) {
+				//					String string = (String) iterator.next();
+				//					System.err.println(string);
+				//
+				//				}
 				break;
 			case RequestType.ENC:
 
@@ -845,12 +873,12 @@ public class BFTReplica extends DefaultRecoverable{
 			switch (reqType) {
 			case RequestType.NORMAL:
 				mylist = serverLogic.searchGreaterThan(field, value);
-//				List <String> l =mylist.getList();
-//				for (Iterator iterator = l.iterator(); iterator.hasNext();) {
-//					String string = (String) iterator.next();
-//					System.err.println(string);
-//
-//				}
+				//				List <String> l =mylist.getList();
+				//				for (Iterator iterator = l.iterator(); iterator.hasNext();) {
+				//					String string = (String) iterator.next();
+				//					System.err.println(string);
+				//
+				//				}
 				break;
 			case RequestType.ENC:
 

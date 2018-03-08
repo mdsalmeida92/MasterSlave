@@ -78,6 +78,42 @@ public class BFTServerResources {
 
 	}
 
+	
+	@GET
+	@Path("/Encrypted/{key}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public MyEntry getEntry(@PathParam("key") String key,
+			@QueryParam("iv") String iv,
+			@QueryParam("RandomKey") String RandomKey) throws InterruptedException {
+
+		try {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ObjectOutputStream out = new ObjectOutputStream(bos);
+			out.writeInt(RequestType.GETSET);
+			out.writeInt(RequestType.ONIONENC);
+			out.writeUTF(key);
+			out.writeUTF(iv);
+			out.writeUTF(RandomKey);
+			out.flush();
+
+			byte[] reply = clientProxy.invokeUnordered(bos.toByteArray());
+
+			ByteArrayInputStream bis = new ByteArrayInputStream(reply);
+			ObjectInput in = new ObjectInputStream(bis);
+			MyEntry set = (MyEntry) in.readObject(); 
+
+			return set;
+		} catch(IOException ioe) {
+			System.out.println("Exception getting value from the hashmap: " + ioe.getMessage());
+			return null;
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			return null;
+		}	 catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
 	@GET
 	@Path("/{key}")
@@ -89,7 +125,7 @@ public class BFTServerResources {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream out = new ObjectOutputStream(bos);
 			out.writeInt(RequestType.GETSET);
-
+			out.writeInt(RequestType.NORMAL);
 			out.writeUTF(key);
 			out.flush();
 
