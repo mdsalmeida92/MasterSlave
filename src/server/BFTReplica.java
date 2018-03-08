@@ -30,11 +30,13 @@ public class BFTReplica extends DefaultRecoverable{
 
 	public ServerLogic serverLogic;
 	public boolean byzantine;
+	public double byzantinePercentage;
 
-	public BFTReplica(int port, int id, String configpath, boolean byzantine){
+	public BFTReplica(int port, int id, String configpath, boolean byzantine, double byzantinePercentage){
 
 		serverLogic = new ServerLogic(port);
 		this.byzantine = byzantine;
+		this.byzantinePercentage = byzantinePercentage;
 
 		new ServiceReplica(id,configpath, this,this,null,null);
 
@@ -47,17 +49,19 @@ public class BFTReplica extends DefaultRecoverable{
 		options.addOption("port", true, "redis port");
 		options.addOption("id", true, "replica id");
 		options.addOption("path", true, "configpath");
-		options.addOption("byzantine", false, "byzantine");
+		options.addOption("byzantine", true, "byzantine");
 		String path = "/home/mario/eclipse-workspace/MasterSlaveRedis/config/";
 		String port = "6379";
 		String id = "0";
 		boolean byzantine = false;
+		double byzantinePercentage = 0.10;
 		CommandLine line;
 		try {
 			line = parser.parse( options, args );
 
 			if(line.hasOption("byzantine")) {
 				byzantine = true;
+				byzantinePercentage = Double.parseDouble(line.getOptionValue("byzantine"));
 
 			}
 			if(line.hasOption("port")) {
@@ -79,7 +83,7 @@ public class BFTReplica extends DefaultRecoverable{
 		System.err.println(id);
 		System.err.println(path);
 
-		new BFTReplica(Integer.parseInt(port), Integer.parseInt(id),path,byzantine);
+		new BFTReplica(Integer.parseInt(port), Integer.parseInt(id),path,byzantine,byzantinePercentage);
 	}
 
 
@@ -203,7 +207,7 @@ public class BFTReplica extends DefaultRecoverable{
 			e.printStackTrace();
 		}
 		if(byzantine) {
-			if(Math.random()<0.50)
+			if(Math.random()<byzantinePercentage)
 				return null;
 		}
 		return resultBytes;
@@ -315,7 +319,7 @@ public class BFTReplica extends DefaultRecoverable{
 			e.printStackTrace();
 		}
 		if(byzantine) {
-			if(Math.random()<0.50)
+			if(Math.random()<byzantinePercentage)
 				return null;
 		}
 		return resultBytes;
