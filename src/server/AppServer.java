@@ -1,7 +1,10 @@
 package server;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
+import java.security.KeyStore;
 
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.UriBuilder;
@@ -14,7 +17,9 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
+import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 
 public class AppServer {
@@ -58,8 +63,16 @@ public class AppServer {
 			}
 			config.register( JacksonFeature.class);
 
+			InputStream keystoreInput = new FileInputStream("server.jks");
+		    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+		    keyStore.load(keystoreInput, "changeme".toCharArray());
+		    keystoreInput.close();
+			SslContextFactory factory = new SslContextFactory(true);
+		    factory.setKeyStore(keyStore);
+		    factory.setKeyManagerPassword("changeme");
 
-			JdkHttpServerFactory.createHttpServer(baseUri, config,SSLContext.getDefault());
+			JettyHttpContainerFactory.createServer(baseUri,factory, config);
+		//	JdkHttpServerFactory.createHttpServer(baseUri, config,SSLContext.getDefault());
 			System.err.println("Server ready @ " + baseUri + " : local IP = " + InetAddress.getLocalHost().getHostAddress());
 
 		} catch (ParseException e) {

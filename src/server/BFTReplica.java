@@ -319,9 +319,12 @@ public class BFTReplica extends DefaultRecoverable{
 			e.printStackTrace();
 		}
 		if(byzantine) {
-			if(Math.random()<byzantinePercentage)
+			if(Math.random()<byzantinePercentage) {
+				System.err.println("byzantine");
 				return null;
+				}
 		}
+		System.err.println("not byzantine");
 		return resultBytes;
 	}
 
