@@ -2,14 +2,15 @@
 SearchableEncryptedRedis
 ====================================
 
-1. Install redis, Java and Maven
+Install redis, Java and Maven
 --------------------------------
 
 
-2. Build
+Build
 --------------------------------
 
 run:
+
     ```sh
 	mvn clean package
     ```
@@ -19,12 +20,16 @@ Run Redis Server
 --------------------------------
 
 $server_port: port of the server about to be created
+
 $redis_port: port of the redis key value store
+
 example of variables:
+
     ```sh
 	redis_port=6380
 	server_port=8443
    ```
+run  Server:
     ```sh
 	redis-server --port $redis_port
 
